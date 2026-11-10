@@ -1,0 +1,937 @@
+<title>股関節ペインログ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap">
+<style>
+/* Layout: one phone-width app column (max 520px), sticky header, bottom tab bar, full-screen form sheet over it */
+:root {
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --surface-2: #e6eaef;
+  --fg: #16202b;
+  --muted: #5a6573;
+  --line: #d3dae2;
+  --accent: #3448c5;
+  --accent-ink: #ffffff;
+  --accent-soft: #e2e6fb;
+  --sun: #c23b3b;
+  --sat: #2f62b8;
+  /* pain ramp 0..10 (one warm hue, light → dark) */
+  --p0: #dfe5ea; --p0-ink: #3d4752;
+  --p1: #fde5d6; --p1-ink: #5a2a12;
+  --p2: #f9bf9c; --p2-ink: #5a2a12;
+  --p3: #f08a57; --p3-ink: #3c1606;
+  --p4: #d65520; --p4-ink: #ffffff;
+  --p5: #9f330c; --p5-ink: #ffffff;
+  /* chart series: during / after / next day */
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  /* intensity (ordinal, one hue): 抑えめ → 全力 */
+  --i1: #86b6ef; --i2: #5598e7; --i3: #2a78d6; --i4: #1c5cab; --i5: #104281;
+  --grid: #e3e8ed;
+  --font-display: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --font-body: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1318; --surface: #181e25; --surface-2: #222a33; --fg: #e8ecf0; --muted: #9ba6b2;
+    --line: #2d3741; --accent: #8e9cf2; --accent-ink: #0d1230; --accent-soft: #262d54;
+    --sun: #ee7d7d; --sat: #7fa7ec;
+    --p0: #2a333c; --p0-ink: #c4ccd4;
+    --p1: #4a3020; --p1-ink: #fbd9c4;
+    --p2: #7a3e1d; --p2-ink: #fde3d3;
+    --p3: #b4521f; --p3-ink: #ffffff;
+    --p4: #e06a30; --p4-ink: #1a0a02;
+    --p5: #f59a6a; --p5-ink: #1a0a02;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --i1: #1c5cab; --i2: #256abf; --i3: #3987e5; --i4: #6da7ec; --i5: #b7d3f6;
+    --grid: #26303a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1318; --surface: #181e25; --surface-2: #222a33; --fg: #e8ecf0; --muted: #9ba6b2;
+  --line: #2d3741; --accent: #8e9cf2; --accent-ink: #0d1230; --accent-soft: #262d54;
+  --sun: #ee7d7d; --sat: #7fa7ec;
+  --p0: #2a333c; --p0-ink: #c4ccd4;
+  --p1: #4a3020; --p1-ink: #fbd9c4;
+  --p2: #7a3e1d; --p2-ink: #fde3d3;
+  --p3: #b4521f; --p3-ink: #ffffff;
+  --p4: #e06a30; --p4-ink: #1a0a02;
+  --p5: #f59a6a; --p5-ink: #1a0a02;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --i1: #1c5cab; --i2: #256abf; --i3: #3987e5; --i4: #6da7ec; --i5: #b7d3f6;
+  --grid: #26303a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--fg); }
+body { font-family: var(--font-body); font-size: 14px; line-height: 1.6; -webkit-tap-highlight-color: transparent; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--surface); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+
+.mockbar { background: var(--accent-soft); color: var(--fg); font-size: 12px; text-align: center; padding: 6px max(16px, env(safe-area-inset-right, 0px)) 6px max(16px, env(safe-area-inset-left, 0px)); }
+.mockbar a { color: var(--accent); }
+
+.app { max-width: 520px; margin: 0 auto; min-height: 100%; background: var(--bg); padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--surface); border-bottom: 1px solid var(--line);
+  padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; align-items: center; gap: 8px; }
+.top h1 { font-family: var(--font-display); font-size: 19px; font-weight: 900; margin: 0; flex: 1; letter-spacing: .02em; }
+.iconbtn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; min-width: 36px; height: 36px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; }
+.iconbtn:hover { background: var(--surface-2); }
+.section { padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* calendar */
+.cal { background: var(--surface); border-radius: var(--r); border: 1px solid var(--line); overflow: hidden; }
+.cal-head, .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.cal-head div { text-align: center; font-size: 11px; color: var(--muted); padding: 6px 0; letter-spacing: .08em; }
+.cal-head div:nth-child(6) { color: var(--sat); } .cal-head div:nth-child(7) { color: var(--sun); }
+.day { position: relative; min-height: 74px; border-top: 1px solid var(--line); border-left: 1px solid var(--line); padding: 4px 3px 4px; background: var(--surface); text-align: left; display: flex; flex-direction: column; gap: 2px; border-right: 0; border-bottom: 0; }
+.day:nth-child(7n+1) { border-left: 0; }
+.day.out { background: var(--surface-2); opacity: .55; }
+.day .dn { font-size: 12px; font-weight: 500; line-height: 1; padding: 2px 2px 0; }
+.day.sun .dn { color: var(--sun); } .day.sat .dn { color: var(--sat); }
+.day.today .dn { background: var(--accent); color: var(--accent-ink); border-radius: 99px; padding: 3px 6px; align-self: flex-start; }
+.day.sel { box-shadow: inset 0 0 0 2px var(--accent); }
+.badge { position: absolute; top: 3px; right: 3px; min-width: 20px; height: 20px; border-radius: 6px; font-size: 12px; font-weight: 700; display: grid; place-items: center; padding: 0 3px; }
+.chips { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 4px; }
+.chip-ex { font-size: 10px; line-height: 1; padding: 3px 3px; border-radius: 4px; background: var(--accent-soft); color: var(--fg); white-space: nowrap; }
+.chip-pain { font-size: 10px; line-height: 1; padding: 3px 3px; border-radius: 4px; border: 1px dashed var(--line); color: var(--muted); }
+.lv0 { background: var(--p0); color: var(--p0-ink); } .lv1 { background: var(--p1); color: var(--p1-ink); }
+.lv2 { background: var(--p2); color: var(--p2-ink); } .lv3 { background: var(--p3); color: var(--p3-ink); }
+.lv4 { background: var(--p4); color: var(--p4-ink); } .lv5 { background: var(--p5); color: var(--p5-ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 11px; color: var(--muted); margin-top: 10px; align-items: center; }
+.legend .sw { display: inline-flex; gap: 2px; vertical-align: middle; }
+.legend .sw span { width: 16px; height: 12px; border-radius: 3px; font-size: 9px; display: grid; place-items: center; }
+
+/* day panel */
+.daypanel { margin-top: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 10px; }
+.daypanel h2 { font-family: var(--font-display); font-size: 16px; margin: 0; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 9px 14px; font-weight: 500; }
+.btn:hover { background: var(--surface-2); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.danger { color: var(--sun); }
+.btn.block { width: 100%; }
+.rec { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 4px; background: var(--bg); }
+.rec-h { display: flex; align-items: center; gap: 8px; }
+.rec-h strong { flex: 1; min-width: 0; }
+.kind { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: var(--accent-soft); white-space: nowrap; }
+.kind.p { background: var(--surface-2); }
+.rec dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 12px; }
+.rec dt { color: var(--muted); } .rec dd { margin: 0; min-width: 0; }
+.lvpill { display: inline-block; min-width: 18px; text-align: center; border-radius: 4px; font-size: 11px; font-weight: 700; padding: 0 4px; margin-right: 2px; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+
+/* bottom nav + fab */
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+.tabs-in { max-width: 520px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); }
+.tab { background: none; border: 0; padding: 10px 0 12px; font-size: 12px; color: var(--muted); display: grid; justify-items: center; gap: 2px; }
+.tab svg { width: 22px; height: 22px; }
+.tab[aria-current="page"] { color: var(--accent); font-weight: 700; }
+.fab { position: fixed; z-index: 26; right: max(16px, calc((100vw - 520px) / 2 + 16px)); bottom: calc(72px + env(safe-area-inset-bottom, 0px)); width: 56px; height: 56px; border-radius: 18px; border: 0; background: var(--accent); color: var(--accent-ink); font-size: 30px; line-height: 1; box-shadow: 0 6px 18px rgba(20,30,80,.28); }
+.fabmenu { position: fixed; z-index: 26; right: max(16px, calc((100vw - 520px) / 2 + 16px)); bottom: calc(136px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 8px; justify-items: end; }
+.fabmenu .btn { box-shadow: 0 4px 14px rgba(20,30,80,.18); }
+
+/* form sheet */
+.sheet { position: fixed; inset: 0; z-index: 40; background: var(--bg); overflow-y: auto; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.sheet-in { max-width: 520px; margin: 0 auto; }
+.sheet .top { top: 0; }
+.form { display: grid; gap: 14px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 12px; }
+.card h3 { margin: 0; font-family: var(--font-display); font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.card h3 .step { font-size: 11px; font-family: var(--font-body); font-weight: 500; color: var(--muted); letter-spacing: .06em; }
+.field { display: grid; gap: 4px; }
+.field label, .lbl { font-size: 12px; color: var(--muted); }
+.inp { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; background: var(--surface); min-width: 0; }
+textarea.inp { min-height: 72px; resize: vertical; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); padding: 6px 12px; font-size: 13px; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.toggle { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 5px 12px; font-size: 13px; }
+.toggle[aria-pressed="true"] { background: var(--p0); border-color: var(--p0); font-weight: 700; }
+.painrow { border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: grid; gap: 8px; background: var(--bg); }
+.painrow-h { display: flex; gap: 8px; align-items: center; }
+.painrow-h select { flex: 1; }
+.x { border: 0; background: none; color: var(--muted); font-size: 18px; width: 32px; height: 32px; border-radius: 6px; }
+.x:hover { background: var(--surface-2); }
+.scale { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 3px; }
+.scale button { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; height: 34px; font-size: 13px; font-weight: 500; padding: 0; font-variant-numeric: tabular-nums; }
+.scale button[aria-pressed="true"] { border-color: transparent; font-weight: 700; transform: scale(1.06); }
+.scale-cap { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+.add { border: 1px dashed var(--line); background: none; border-radius: 8px; padding: 9px; color: var(--accent); font-weight: 500; width: 100%; }
+.add:hover { background: var(--accent-soft); }
+.quick { display: flex; gap: 6px; flex-wrap: wrap; }
+.quick button { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 4px 10px; font-size: 12px; }
+.quick button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.act { border-left: 3px solid var(--accent); }
+.hint { font-size: 12px; color: var(--muted); background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
+.hint b { color: var(--fg); }
+.connector { text-align: center; font-size: 11px; color: var(--muted); margin: -6px 0; }
+.savebar { position: sticky; bottom: 0; background: var(--bg); padding-block: 10px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; border-top: 1px solid var(--line); }
+.savebar .primary { flex: 1; }
+
+/* graphs */
+.filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filters select { width: auto; flex: 1; min-width: 120px; }
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; }
+.tile .v { font-family: var(--font-display); font-size: 26px; font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tile .v small { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 2px; }
+.tile .k { font-size: 11px; color: var(--muted); }
+.chartcard { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 8px; }
+.chartcard h2 { margin: 0; font-family: var(--font-display); font-size: 15px; }
+.insight { font-size: 13px; }
+.insight b { font-weight: 700; }
+.keys { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+.keys i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
+svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+svg.chart text { fill: var(--muted); font-size: 11px; font-family: var(--font-body); }
+svg.chart .lab { fill: var(--fg); font-size: 12px; }
+details.tbl summary { font-size: 12px; color: var(--accent); cursor: pointer; }
+.tblwrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; margin-top: 6px; }
+th, td { padding: 5px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--muted); font-weight: 500; }
+.intens { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.intens button { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 2px; display: grid; gap: 1px; justify-items: center; line-height: 1.2; }
+.intens button b { font-size: 16px; font-variant-numeric: tabular-nums; }
+.intens button span { font-size: 10px; color: var(--muted); }
+.intens button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.intens button[aria-pressed="true"] span { color: var(--accent-ink); }
+.hist { font-size: 12px; background: var(--surface-2); border-radius: 6px; padding: 6px 9px; color: var(--muted); }
+.hist b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.tip { position: fixed; z-index: 60; pointer-events: none; background: var(--fg); color: var(--bg); font-size: 12px; padding: 6px 9px; border-radius: 6px; line-height: 1.5; max-width: 220px; }
+
+/* settings */
+.list { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+.list > div { padding: 11px 14px; display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid var(--line); align-items: center; }
+.list > div:first-child { border-top: 0; }
+.list h3 { margin: 0; font-size: 13px; }
+.grp { font-size: 12px; color: var(--muted); margin: 14px 2px 6px; letter-spacing: .06em; }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(150px + env(safe-area-inset-bottom, 0px)); z-index: 70; background: var(--fg); color: var(--bg); padding: 9px 16px; border-radius: 8px; font-size: 13px; max-width: calc(100% - 32px); }
+@media (prefers-reduced-motion: no-preference) {
+  .scale button { transition: transform .12s; }
+  .toast { animation: up .2s ease-out; }
+  @keyframes up { from { transform: translate(-50%, 8px); opacity: 0; } }
+}
+@media (min-width: 560px) { .day { min-height: 84px; } .chip-ex, .chip-pain { font-size: 11px; } }
+</style>
+
+<div class="mockbar">モック（画面イメージ）です。サンプルデータ入り・保存は再読み込みで消えます。</div>
+<div class="app" id="app"></div>
+<nav class="tabs" aria-label="メイン">
+  <div class="tabs-in">
+    <button class="tab" data-tab="calendar" id="tab-calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>カレンダー</button>
+    <button class="tab" data-tab="graph" id="tab-graph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V4M4 20h16"/><path d="M7 15l4-5 3 3 5-7"/></svg>グラフ</button>
+    <button class="tab" data-tab="settings" id="tab-settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>設定</button>
+  </div>
+</nav>
+<button class="fab" id="fab" aria-label="新しい記録" aria-expanded="false">＋</button>
+<div class="fabmenu" id="fabmenu" hidden>
+  <button class="btn" id="fab-ex">運動を記録</button>
+  <button class="btn" id="fab-pain">痛みだけ記録</button>
+</div>
+<div class="sheet" id="sheet" hidden></div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+(() => {
+const TYPES = [
+  { id: 'bc', name: 'ボディコンバット', short: 'BC', min: 55 },
+  { id: 'ba', name: 'ボディアタック', short: 'BA', min: 55 },
+  { id: 'bp', name: 'ボディパンプ', short: 'BP', min: 60 },
+  { id: 'bs', name: 'ボディステップ', short: 'BS', min: 55 },
+  { id: 'tt', name: '卓球', short: '卓球', min: 60 },
+  { id: 'bd', name: 'バドミントン', short: 'バド', min: 60 },
+  { id: 'yg', name: 'ヨガ', short: 'ヨガ', min: 45 },
+  { id: 'rn', name: 'ランニング', short: 'ラン', min: 30 },
+  { id: 'mt', name: '登山', short: '登山', min: 180 },
+  { id: 'pl', name: 'プール', short: 'プール', min: 30 },
+  { id: 'ot', name: 'その他', short: '他', min: 30 },
+];
+const PARTS = [
+  { id: 'groin', name: '股関節 前（鼠径部）' },
+  { id: 'hipside', name: '股関節 外側' },
+  { id: 'buttock', name: 'お尻' },
+  { id: 'thighF', name: '太もも 前' },
+  { id: 'thighS', name: '太もも 外側' },
+  { id: 'thighI', name: '太もも 内側' },
+  { id: 'back', name: '腰' },
+  { id: 'knee', name: '膝' },
+  { id: 'other', name: 'その他' },
+];
+const SIDES = { L: '左', R: '右', B: '両' };
+const TIMINGS = [{ id: 'wake', name: '起床時' }, { id: 'day', name: '日中' }, { id: 'night', name: '就寝前' }, { id: 'other', name: 'その他' }];
+const INTENS = [
+  { id: 1, name: 'かなり抑えめ', hint: 'ローインパクト中心、ジャンプなし' },
+  { id: 2, name: '少し抑えめ', hint: '一部の動きだけ控えた' },
+  { id: 3, name: 'ふつう', hint: 'いつも通り' },
+  { id: 4, name: 'しっかり', hint: 'いつもより頑張った' },
+  { id: 5, name: '全力', hint: '限界まで出し切った' },
+];
+const intName = id => { const t = INTENS.find(t => t.id === id) || INTENS[2]; return `強度${t.id} ${t.name}`; };
+/* graph grouping: 3 groups (default) or all 5 levels */
+function intGroups() {
+  return settings.intView === '5'
+    ? INTENS.map(t => ({ id: String(t.id), name: `${t.id} ${t.name}`, color: `var(--i${t.id})` }))
+    : [{ id: 'L', name: '抑えめ（1〜2）', color: 'var(--i1)' }, { id: 'M', name: 'ふつう（3）', color: 'var(--i3)' }, { id: 'H', name: '全力寄り（4〜5）', color: 'var(--i5)' }];
+}
+const groupOf = lv => settings.intView === '5' ? String(lv) : lv <= 2 ? 'L' : lv === 3 ? 'M' : 'H';
+const TODAY = '2026-11-10';
+const typeOf = id => TYPES.find(t => t.id === id) || TYPES[TYPES.length - 1];
+const partOf = id => PARTS.find(p => p.id === id) || PARTS[PARTS.length - 1];
+const actName = a => !a.typeId ? '種類を選んでください' : a.typeId === 'ot' ? (a.otherName || 'その他') : typeOf(a.typeId).name;
+const actShort = a => a.typeId === 'ot' ? (a.otherName || '他').slice(0, 3) : typeOf(a.typeId).short;
+const lvClass = v => v == null ? '' : v === 0 ? 'lv0' : v <= 2 ? 'lv1' : v <= 4 ? 'lv2' : v <= 6 ? 'lv3' : v <= 8 ? 'lv4' : 'lv5';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pad = n => String(n).padStart(2, '0');
+const fmt = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate() + n); return fmt(d); };
+const jpDate = s => { const d = parse(s); return `${d.getMonth() + 1}月${d.getDate()}日（${'日月火水木金土'[d.getDay()]}）`; };
+const uid = () => Math.random().toString(36).slice(2, 10);
+const clamp = v => Math.max(0, Math.min(10, Math.round(v)));
+const emptySet = () => ({ none: false, items: [] });
+
+/* level of a pain set: null = 未記入, 0 = 痛みなし, else max (optionally for one part) */
+function setLevel(set, part) {
+  if (!set) return null;
+  if (set.none) return 0;
+  const items = part ? set.items.filter(i => i.partId === part) : set.items;
+  if (!set.items.length) return null;
+  if (!items.length) return part ? 0 : null;
+  return Math.max(...items.map(i => i.level));
+}
+
+/* ---------- sample data ---------- */
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function sample() {
+  const r = rng(11), recs = [];
+  const prof = { ba: [4, 5, 4], bc: [3, 4, 3], bp: [2, 3, 2], bs: [3, 4, 3], yg: [1, 1, 1], pl: [0, 1, 1], rn: [4, 5, 4], tt: [2, 3, 2], bd: [4, 4, 3], mt: [3, 5, 5] };
+  const pick = ['ba', 'ba', 'bc', 'bc', 'bp', 'bp', 'bs', 'yg', 'yg', 'pl', 'rn', 'tt', 'mt'];
+  const j = () => Math.round((r() - 0.5) * 2.4);
+  const part = () => { const x = r(); return x < 0.62 ? 'groin' : x < 0.8 ? 'hipside' : x < 0.92 ? 'buttock' : 'thighF'; };
+  const mk = lv => lv <= 0 ? { none: true, items: [] } : { none: false, items: [{ partId: part(), side: 'R', level: clamp(lv) }].concat(lv >= 5 && r() < 0.35 ? [{ partId: 'buttock', side: 'R', level: clamp(lv - 2) }] : []) };
+  let carry = null;
+  for (let ds = '2026-09-01'; ds <= TODAY; ds = addDays(ds, 1)) {
+    const dow = parse(ds).getDay();
+    const base = carry ?? Math.round(r() * 2);
+    if (carry != null || r() < 0.45) recs.push({ id: uid(), kind: 'pain', date: ds, timing: 'wake', pain: mk(base), memo: '' });
+    carry = null;
+    if (ds === TODAY) break;
+    if (r() < (dow === 0 || dow === 6 ? 0.75 : 0.5)) {
+      const t1 = pick[Math.floor(r() * pick.length)];
+      const ts = [t1];
+      if ((t1 === 'ba' || t1 === 'bc' || t1 === 'bs') && r() < 0.35) ts.push(r() < 0.5 ? 'bp' : 'yg');
+      const MOD = { 1: -2, 2: -1, 3: 0, 4: 0.7, 5: 1.3 };
+      const MV = { ba: ['ジャンプ', 'ランジ'], bc: ['キック', 'ひねり'], bp: ['スクワット', 'ランジ'], bs: ['ステップ昇降', 'ランジ'], tt: ['切り返し'], bd: ['切り返し', 'ジャンプ'], rn: ['着地'], mt: ['下り坂', 'ステップ昇降'], yg: ['開脚', '片脚立ち'], pl: ['キック'] };
+      const acts = ts.map(t => {
+        const x = r(), it = x < 0.12 ? 1 : x < 0.3 ? 2 : x < 0.6 ? 3 : x < 0.85 ? 4 : 5;
+        const dl = prof[t][0] + MOD[it] + j();
+        let mv = dl >= 3 ? MV[t].filter(() => r() < 0.6) : [];
+        if (dl >= 3 && !mv.length) mv = [MV[t][0]];
+        return { typeId: t, otherName: '', minutes: typeOf(t).min, intensity: it, moves: mv, during: mk(dl), _m: MOD[it] };
+      });
+      const after = Math.max(...acts.map(a => prof[a.typeId][1] + a._m)) + j();
+      const nextLv = Math.max(...acts.map(a => prof[a.typeId][2] + a._m)) + j();
+      acts.forEach(a => delete a._m);
+      recs.push({ id: uid(), kind: 'exercise', date: ds, startTime: dow === 0 || dow === 6 ? '10:30' : '19:15', before: mk(base + (r() < 0.3 ? 1 : 0)), activities: acts, after: mk(after), memo: ts.includes('ba') && r() < 0.4 ? 'ジャンプ系の後半で鼠径部に引っかかり' : '' });
+      carry = nextLv;
+    }
+  }
+  return recs;
+}
+
+const settings = { calMode: 'max', useTags: false, tags: ['ズキズキ', '鈍い', '引っかかる', '抜ける感じ', '張り'], gapMin: 30, intView: '3', moves: ['ジャンプ', 'キック', 'ランジ', 'スクワット', '開脚', 'ひねり', '片脚立ち', 'ステップ昇降', '切り返し', '着地', '下り坂'] };
+const state = { sub: null, tab: 'calendar', ym: TODAY.slice(0, 7), sel: TODAY, records: sample(), period: '30', part: '', draft: null };
+
+const $ = s => document.querySelector(s);
+const app = $('#app'), sheet = $('#sheet'), tip = $('#tip');
+
+function recordsOn(ds) { return state.records.filter(r => r.date === ds).sort((a, b) => (a.kind === 'pain' && a.timing === 'wake' ? -1 : 0) - (b.kind === 'pain' && b.timing === 'wake' ? -1 : 0) || String(a.startTime || '').localeCompare(String(b.startTime || ''))); }
+function setsOf(r) { return r.kind === 'pain' ? [r.pain] : [r.before, ...r.activities.map(a => a.during), r.after]; }
+function dayMax(ds, part) {
+  const ls = recordsOn(ds).flatMap(setsOf).map(s => setLevel(s, part)).filter(v => v != null);
+  return ls.length ? Math.max(...ls) : null;
+}
+function dayAvg(ds) {
+  const ls = recordsOn(ds).flatMap(setsOf).map(s => setLevel(s)).filter(v => v != null);
+  return ls.length ? ls.reduce((a, b) => a + b, 0) / ls.length : null;
+}
+
+/* ---------- calendar ---------- */
+function renderCalendar() {
+  const [y, m] = state.ym.split('-').map(Number);
+  const first = new Date(y, m - 1, 1);
+  const start = new Date(first); start.setDate(1 - (first.getDay() + 6) % 7);
+  let cells = '';
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    const ds = fmt(d);
+    if (i === 35 && d.getMonth() !== m - 1) break;
+    const recs = recordsOn(ds);
+    const mx0 = settings.calMode === 'avg' ? dayAvg(ds) : dayMax(ds);
+    const mx = mx0 == null ? null : settings.calMode === 'avg' ? Math.round(mx0 * 10) / 10 : mx0;
+    const acts = recs.filter(r => r.kind === 'exercise').flatMap(r => r.activities);
+    const painOnly = !acts.length && recs.length;
+    cells += `<button class="day ${d.getMonth() !== m - 1 ? 'out' : ''} ${d.getDay() === 0 ? 'sun' : d.getDay() === 6 ? 'sat' : ''} ${ds === TODAY ? 'today' : ''} ${ds === state.sel ? 'sel' : ''}" data-day="${ds}" aria-label="${jpDate(ds)}${mx != null ? ' 痛み最大' + mx : ''}">
+      <span class="dn num">${d.getDate()}</span>
+      ${mx != null ? `<span class="badge num ${lvClass(Math.round(mx))}">${mx}</span>` : ''}
+      <span class="chips">${acts.map(a => `<span class="chip-ex">${esc(actShort(a))}</span>`).join('')}${painOnly ? '<span class="chip-pain">痛</span>' : ''}</span>
+    </button>`;
+  }
+  app.innerHTML = `
+    <header class="top">
+      <h1>${y}年${m}月</h1>
+      <button class="iconbtn" id="prev" aria-label="前の月">‹</button>
+      <button class="iconbtn" id="today">今日</button>
+      <button class="iconbtn" id="next" aria-label="次の月">›</button>
+    </header>
+    <div class="section">
+      <div class="cal">
+        <div class="cal-head">${[...'月火水木金土日'].map(w => `<div>${w}</div>`).join('')}</div>
+        <div class="cal-grid">${cells}</div>
+      </div>
+      <div class="legend">
+        <span>右上の数字＝その日の痛みの${settings.calMode === 'avg' ? '平均' : '最大値'}（設定で切り替え）</span>
+        <span class="sw">${[0, 2, 4, 6, 8, 10].map(v => `<span class="${lvClass(v)} num">${v}</span>`).join('')}</span>
+      </div>
+      <div class="legend"><span>BC コンバット · BA アタック · BP パンプ · BS ステップ · <span class="chip-pain">痛</span> 痛みのみ記録</span></div>
+      ${dayPanel(state.sel)}
+    </div>`;
+  $('#prev').onclick = () => { const d = parse(state.ym + '-01'); d.setMonth(d.getMonth() - 1); state.ym = fmt(d).slice(0, 7); render(); };
+  $('#next').onclick = () => { const d = parse(state.ym + '-01'); d.setMonth(d.getMonth() + 1); state.ym = fmt(d).slice(0, 7); render(); };
+  $('#today').onclick = () => { state.ym = TODAY.slice(0, 7); state.sel = TODAY; render(); };
+  app.querySelectorAll('[data-day]').forEach(b => b.onclick = () => { state.sel = b.dataset.day; if (b.dataset.day.slice(0, 7) !== state.ym) state.ym = b.dataset.day.slice(0, 7); render(); });
+  bindDayPanel();
+}
+
+function painText(set) {
+  if (!set) return '<span class="muted">未記入</span>';
+  if (set.none) return `<span class="lvpill lv0 num">0</span>痛みなし`;
+  if (!set.items.length) return '<span class="muted">未記入</span>';
+  return set.items.map(i => `<span class="lvpill ${lvClass(i.level)} num">${i.level}</span>${esc(partOf(i.partId).name)}（${SIDES[i.side]}）${i.tags && i.tags.length ? '・' + esc(i.tags.join('・')) : ''}`).join('　');
+}
+function dayPanel(ds) {
+  const recs = recordsOn(ds);
+  const list = recs.map(r => r.kind === 'exercise' ? `
+    <div class="rec">
+      <div class="rec-h"><span class="kind">運動</span><strong>${r.activities.map(a => `${esc(actName(a))} ${a.minutes}分`).join(' → ')}</strong><button class="btn small" data-edit="${r.id}">編集</button></div>
+      <dl>
+        ${r.startTime ? `<dt>開始</dt><dd class="num">${r.startTime}</dd>` : ''}
+        <dt>運動前</dt><dd>${painText(r.before)}</dd>
+        ${r.activities.map(a => `<dt>${esc(actShort(a))} 中</dt><dd>${painText(a.during)} <span class="muted">［${intName(a.intensity)}${a.moves && a.moves.length ? '・動き: ' + esc(a.moves.join('・')) : ''}］</span></dd>`).join('')}
+        <dt>運動後</dt><dd>${painText(r.after)}</dd>
+        ${r.memo ? `<dt>メモ</dt><dd>${esc(r.memo)}</dd>` : ''}
+      </dl>
+    </div>` : `
+    <div class="rec">
+      <div class="rec-h"><span class="kind p">痛み</span><strong>${TIMINGS.find(t => t.id === r.timing).name}</strong><button class="btn small" data-edit="${r.id}">編集</button></div>
+      <dl><dt>痛み</dt><dd>${painText(r.pain)}</dd>${r.memo ? `<dt>メモ</dt><dd>${esc(r.memo)}</dd>` : ''}</dl>
+    </div>`).join('');
+  return `<div class="daypanel">
+    <h2>${jpDate(ds)}</h2>
+    ${list || '<p class="muted small" style="margin:0">この日の記録はまだありません。</p>'}
+    <div class="row"><button class="btn primary" data-new="exercise">＋ 運動を記録</button><button class="btn" data-new="pain">＋ 痛みだけ記録</button></div>
+  </div>`;
+}
+function bindDayPanel() {
+  app.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => openForm(state.records.find(r => r.id === b.dataset.edit)));
+  app.querySelectorAll('[data-new]').forEach(b => b.onclick = () => openForm(newRecord(b.dataset.new, state.sel)));
+}
+
+/* ---------- forms ---------- */
+let lastSide = 'R';
+function newRecord(kind, date) {
+  return kind === 'exercise'
+    ? { id: null, kind, date, startTime: '', before: emptySet(), activities: [{ typeId: '', otherName: '', minutes: null, intensity: 3, moves: [], during: emptySet() }], after: emptySet(), memo: '' }
+    : { id: null, kind, date, timing: 'wake', pain: emptySet(), memo: '' };
+}
+function openForm(rec) {
+  state.draft = JSON.parse(JSON.stringify(rec));
+  sheet.hidden = false;
+  document.body.style.overflow = 'hidden';
+  renderForm();
+  sheet.scrollTop = 0;
+}
+function closeForm() { sheet.hidden = true; document.body.style.overflow = ''; state.draft = null; render(); }
+
+function painEditor(set, key) {
+  return `<div class="field" data-set="${key}">
+    <div class="row"><button type="button" class="toggle" data-none="${key}" aria-pressed="${set.none}">痛みなし</button>
+      <span class="small muted">${set.none ? '0 として記録します' : set.items.length ? '' : '未記入のままでも保存できます'}</span></div>
+    ${set.none ? '' : set.items.map((it, i) => `
+      <div class="painrow">
+        <div class="painrow-h">
+          <select class="inp" id="part-${key}-${i}" data-part="${key}" data-i="${i}" aria-label="部位">${PARTS.filter(p => !p.hidden || p.id === it.partId).map(p => `<option value="${p.id}" ${p.id === it.partId ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select>
+          <span class="seg">${Object.entries(SIDES).map(([k, v]) => `<button type="button" data-side="${key}" data-i="${i}" data-v="${k}" aria-pressed="${it.side === k}">${v}</button>`).join('')}</span>
+          <button type="button" class="x" data-rm="${key}" data-i="${i}" aria-label="この痛みを削除">×</button>
+        </div>
+        <div class="scale" role="group" aria-label="痛みの程度">${Array.from({ length: 11 }, (_, v) => `<button type="button" data-lv="${key}" data-i="${i}" data-v="${v}" aria-pressed="${it.level === v}" class="${it.level === v ? lvClass(v) : ''}">${v}</button>`).join('')}</div>
+        <div class="scale-cap"><span>0 なし</span><span>1–3 軽い</span><span>4–6 中くらい</span><span>7–10 強い</span></div>
+        ${settings.useTags ? `<div class="quick">${settings.tags.map(t => `<button type="button" data-tag="${key}" data-i="${i}" data-v="${esc(t)}" aria-pressed="${(it.tags || []).includes(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
+      </div>`).join('')}
+    ${set.none ? '' : `<button type="button" class="add" data-addpain="${key}">＋ 痛みを追加（部位・程度）</button>`}
+  </div>`;
+}
+function getSet(key) {
+  const d = state.draft;
+  if (key === 'before') return d.before;
+  if (key === 'after') return d.after;
+  if (key === 'pain') return d.pain;
+  return d.activities[Number(key.split('-')[1])].during;
+}
+
+let TPL = [];
+function combos() {
+  const ex = state.records.filter(r => r.kind === 'exercise').sort((a, b) => a.date.localeCompare(b.date));
+  const cnt = {};
+  ex.forEach(r => { const key = r.activities.map(a => `${a.typeId}|${a.otherName}|${a.minutes}`).join('>'); (cnt[key] ||= { n: 0, acts: r.activities }).n++; });
+  const list = Object.values(cnt).sort((a, b) => b.n - a.n).slice(0, 4).map(c => ({ label: c.acts.map(a => `${actShort(a)} ${a.minutes}分`).join('→'), acts: c.acts }));
+  const last = ex.at(-1);
+  if (last) list.unshift({ label: '前回と同じ（' + last.activities.map(actShort).join('→') + '）', acts: last.activities });
+  return list;
+}
+function tplBlock(d) {
+  if (d.id) return '';
+  TPL = combos();
+  if (!TPL.length) return '';
+  return `<div class="card"><div class="field"><span class="lbl">よく使う組み合わせ（タップで運動欄に入ります）</span><div class="quick">${TPL.map((t, i) => `<button type="button" data-tpl="${i}">${esc(t.label)}</button>`).join('')}</div></div></div>`;
+}
+function typeHistory(a) {
+  const o = { n: 0, d: [], a: [], x: [] };
+  state.records.filter(r => r.kind === 'exercise' && r.id !== state.draft?.id).forEach(r => r.activities.forEach(b => {
+    if (b.typeId !== a.typeId || (a.typeId === 'ot' && b.otherName !== a.otherName)) return;
+    o.n++;
+    const dv = setLevel(b.during); if (dv != null) o.d.push(dv);
+    const av = setLevel(r.after); if (av != null) o.a.push(av);
+    const nv = nextDayVal(r.date); if (nv != null) o.x.push(nv);
+  }));
+  return o.n ? `<div class="hist">これまでの平均（${o.n}回）　運動中 <b>${f1(avg(o.d))}</b>　運動後 <b>${f1(avg(o.a))}</b>　翌日 <b>${f1(avg(o.x))}</b></div>` : '';
+}
+function secondNotice(d) {
+  if (d.id) return '';
+  const ex = state.records.filter(r => r.kind === 'exercise' && r.date === d.date);
+  if (!ex.length) return '';
+  return `<div class="hint">この日は運動記録がすでに ${ex.length} 件あります（${ex.map(r => esc(r.activities.map(actName).join('→'))).join('、')}）。<br>このまま保存すると<b>${ex.length + 1}件目の記録</b>になります。<br>続けて行った運動なら、前の記録に追加してください。
+    <div class="row" style="margin-top:8px"><button type="button" class="btn small" id="f-append">${ex.length > 1 ? '最後の' : ''}記録に続けて追加する</button></div></div>`;
+}
+function renderForm() {
+  const d = state.draft, isEx = d.kind === 'exercise';
+  const body = isEx ? `
+    <div class="card">
+      <div class="two">
+        <div class="field"><label for="f-date">日付</label><input class="inp" type="date" id="f-date" value="${d.date}"></div>
+        <div class="field"><label for="f-time">開始時刻（任意）</label><input class="inp" type="time" id="f-time" value="${d.startTime || ''}"></div>
+      </div>
+    </div>
+    ${tplBlock(d)}
+    ${secondNotice(d)}
+    <div class="card"><h3><span class="step">運動前</span>運動前の痛み</h3>${painEditor(d.before, 'before')}</div>
+    ${d.activities.map((a, i) => `
+      ${i > 0 ? '<div class="connector">↓ 続けて</div>' : ''}
+      <div class="card act">
+        <h3><span class="step">運動 ${i + 1}</span>${esc(actName(a))}${d.activities.length > 1 ? `<button type="button" class="x" style="margin-left:auto" data-rmact="${i}" aria-label="この運動を削除">×</button>` : ''}</h3>
+        <div class="two">
+          <div class="field"><label for="type-${i}">種類</label><select class="inp" id="type-${i}" data-type="${i}"><option value="" ${a.typeId ? '' : 'selected'} disabled>選択してください</option>${TYPES.filter(t => !t.hidden || t.id === a.typeId).map(t => `<option value="${t.id}" ${t.id === a.typeId ? 'selected' : ''}>${t.name}</option>`).join('')}</select></div>
+          <div class="field"><label for="min-${i}">運動時間（分）</label><input class="inp num" type="number" inputmode="numeric" min="1" id="min-${i}" data-min="${i}" value="${a.minutes ?? ''}" placeholder="例: 55"></div>
+        </div>
+        ${a.typeId === 'ot' ? `<div class="field"><label for="other-${i}">運動の名前</label><input class="inp" id="other-${i}" data-other="${i}" value="${esc(a.otherName)}" placeholder="例: ピラティス"></div>` : ''}
+        <div class="quick">${[30, 45, 55, 60, 90].map(m => `<button type="button" data-qmin="${i}" data-v="${m}" aria-pressed="${a.minutes === m}">${m}分</button>`).join('')}</div>
+        ${a.typeId ? typeHistory(a) : ''}
+        <div class="field"><span class="lbl">強度</span>
+          <div class="intens" role="group" aria-label="強度">${INTENS.map(t => `<button type="button" data-int="${i}" data-v="${t.id}" aria-pressed="${(a.intensity || 3) === t.id}"><b>${t.id}</b><span>${t.name}</span></button>`).join('')}</div>
+          <span class="small muted">目安: ${(INTENS.find(t => t.id === (a.intensity || 3))).hint}</span></div>
+        <div class="lbl">運動中の痛み</div>
+        ${painEditor(a.during, 'act-' + i)}
+        <div class="field"><span class="lbl">痛んだ動き（あれば・複数可）</span><div class="quick">${settings.moves.map(m => `<button type="button" data-move="${i}" data-v="${esc(m)}" aria-pressed="${(a.moves || []).includes(m)}">${esc(m)}</button>`).join('')}</div></div>
+      </div>`).join('')}
+    <button type="button" class="add" id="addact">＋ 続けて別の運動を追加</button>
+    <div class="hint"><b>続けて追加</b>＝休憩 ${settings.gapMin} 分未満で次の運動をしたとき。<br>${settings.gapMin} 分以上空いた・一度帰宅した場合は、この記録を保存してから、カレンダーの「＋ 運動を記録」でもう1件作ってください（開始時刻は空欄で大丈夫です）。</div>
+    <div class="card"><h3><span class="step">運動後</span>運動後の痛み</h3>${painEditor(d.after, 'after')}</div>
+    <div class="card"><div class="field"><label for="f-memo">メモ</label><textarea class="inp" id="f-memo" placeholder="例: ジャンプの着地で鼠径部に引っかかり">${esc(d.memo)}</textarea></div></div>
+  ` : `
+    <div class="card">
+      <div class="field"><label for="f-date">日付</label><input class="inp" type="date" id="f-date" value="${d.date}"></div>
+      <div class="field"><span class="lbl">タイミング</span><div class="quick">${TIMINGS.map(t => `<button type="button" data-timing="${t.id}" aria-pressed="${d.timing === t.id}">${t.name}</button>`).join('')}</div></div>
+    </div>
+    <div class="card"><h3>痛み</h3>${painEditor(d.pain, 'pain')}</div>
+    <div class="card"><div class="field"><label for="f-memo">メモ</label><textarea class="inp" id="f-memo" placeholder="例: 階段で少し痛む">${esc(d.memo)}</textarea></div></div>
+  `;
+  sheet.innerHTML = `<div class="sheet-in">
+    <header class="top"><button class="iconbtn" id="f-close" aria-label="閉じる">×</button><h1>${isEx ? '運動の記録' : '痛みの記録'}${d.id ? '（編集）' : ''}</h1></header>
+    <form class="section form" id="form">${body}
+      <div class="savebar">${d.id ? '<button type="button" class="btn danger" id="f-del">削除</button>' : ''}<button type="submit" class="btn primary">保存</button></div>
+    </form></div>`;
+  bindForm();
+}
+function bindForm() {
+  const d = state.draft, f = $('#form');
+  const re = () => { const y = sheet.scrollTop; renderForm(); sheet.scrollTop = y; };
+  $('#f-close').onclick = closeForm;
+  $('#f-date').onchange = e => d.date = e.target.value;
+  const t = $('#f-time'); if (t) t.onchange = e => d.startTime = e.target.value;
+  $('#f-memo').oninput = e => d.memo = e.target.value;
+  f.querySelectorAll('[data-none]').forEach(b => b.onclick = () => { const s = getSet(b.dataset.none); s.none = !s.none; re(); });
+  f.querySelectorAll('[data-addpain]').forEach(b => b.onclick = () => { const s = getSet(b.dataset.addpain); s.items.push({ partId: s.items.at(-1)?.partId || 'groin', side: lastSide, level: null }); re(); });
+  f.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { getSet(b.dataset.rm).items.splice(+b.dataset.i, 1); re(); });
+  f.querySelectorAll('[data-part]').forEach(s => s.onchange = () => { getSet(s.dataset.part).items[+s.dataset.i].partId = s.value; });
+  f.querySelectorAll('[data-side]').forEach(b => b.onclick = () => { getSet(b.dataset.side).items[+b.dataset.i].side = lastSide = b.dataset.v; re(); });
+  f.querySelectorAll('[data-lv]').forEach(b => b.onclick = () => { getSet(b.dataset.lv).items[+b.dataset.i].level = +b.dataset.v; re(); });
+  f.querySelectorAll('[data-type]').forEach(s => s.onchange = () => { const a = d.activities[+s.dataset.type]; a.typeId = s.value; if (!a.minutes) a.minutes = typeOf(s.value).min; re(); });
+  f.querySelectorAll('[data-min]').forEach(s => s.oninput = () => { d.activities[+s.dataset.min].minutes = +s.value; });
+  f.querySelectorAll('[data-qmin]').forEach(b => b.onclick = () => { d.activities[+b.dataset.qmin].minutes = +b.dataset.v; re(); });
+  f.querySelectorAll('[data-other]').forEach(s => s.oninput = () => { d.activities[+s.dataset.other].otherName = s.value; });
+  f.querySelectorAll('[data-rmact]').forEach(b => b.onclick = () => { d.activities.splice(+b.dataset.rmact, 1); re(); });
+  f.querySelectorAll('[data-tag]').forEach(b => b.onclick = () => { const it = getSet(b.dataset.tag).items[+b.dataset.i]; it.tags = it.tags || []; const k = it.tags.indexOf(b.dataset.v); k < 0 ? it.tags.push(b.dataset.v) : it.tags.splice(k, 1); re(); });
+  f.querySelectorAll('[data-int]').forEach(b => b.onclick = () => { d.activities[+b.dataset.int].intensity = +b.dataset.v; re(); });
+  f.querySelectorAll('[data-move]').forEach(b => b.onclick = () => { const a = d.activities[+b.dataset.move]; a.moves = a.moves || []; const k = a.moves.indexOf(b.dataset.v); k < 0 ? a.moves.push(b.dataset.v) : a.moves.splice(k, 1); re(); });
+  f.querySelectorAll('[data-tpl]').forEach(b => b.onclick = () => { d.activities = TPL[+b.dataset.tpl].acts.map(a => ({ typeId: a.typeId, otherName: a.otherName, minutes: a.minutes, intensity: 3, moves: [], during: emptySet() })); re(); toast('運動欄に入れました。強度と痛みを入力してください'); });
+  f.querySelectorAll('[data-timing]').forEach(b => b.onclick = () => { d.timing = b.dataset.timing; re(); });
+  const aa = $('#addact'); if (aa) aa.onclick = () => { d.activities.push({ typeId: '', otherName: '', minutes: null, intensity: 3, moves: [], during: emptySet() }); re(); setTimeout(() => sheet.scrollTop += 260, 0); };
+  const ap = $('#f-append'); if (ap) ap.onclick = () => {
+    const ex = state.records.filter(r => r.kind === 'exercise' && r.date === d.date).at(-1);
+    const copy = JSON.parse(JSON.stringify(ex)); copy.activities.push({ typeId: '', otherName: '', minutes: null, intensity: 3, moves: [], during: emptySet() });
+    openForm(copy); toast('前の記録を開きました。追加した運動を入力してください');
+  };
+  const del = $('#f-del'); if (del) del.onclick = () => {
+    if (del.dataset.armed) { state.records = state.records.filter(r => r.id !== d.id); toast('削除しました'); closeForm(); }
+    else { del.dataset.armed = '1'; del.textContent = 'もう一度押すと削除'; }
+  };
+  f.onsubmit = e => {
+    e.preventDefault();
+    if (d.kind === 'exercise' && d.activities.some(a => !a.typeId || !(a.minutes > 0) || (a.typeId === 'ot' && !a.otherName))) { toast('運動の種類と時間を入力してください'); return; }
+    const sets = d.kind === 'exercise' ? [d.before, ...d.activities.map(a => a.during), d.after] : [d.pain];
+    sets.forEach(s => s.items = s.items.filter(i => i.level != null));
+    if (!d.id) { d.id = uid(); state.records.push(d); } else { state.records = state.records.map(r => r.id === d.id ? d : r); }
+    state.sel = d.date; state.ym = d.date.slice(0, 7); state.tab = 'calendar';
+    toast('保存しました（モックのため再読み込みで消えます）');
+    closeForm();
+  };
+}
+
+/* ---------- graphs ---------- */
+const avg = arr => arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : null;
+function nextDayVal(ds, part) {
+  const nd = addDays(ds, 1);
+  const recs = state.records.filter(x => x.date === nd);
+  const wake = recs.find(x => x.kind === 'pain' && x.timing === 'wake');
+  return wake ? setLevel(wake.pain, part) : (recs.length ? dayMax(nd, part) : null);
+}
+function stats() {
+  const days = state.period === 'all' ? 9999 : +state.period;
+  const from = addDays(TODAY, -days + 1), part = state.part || null;
+  const recs = state.records.filter(r => r.date >= from && r.date <= TODAY);
+  const by = {}, mv = {};
+  recs.filter(r => r.kind === 'exercise').forEach(r => {
+    const after = setLevel(r.after, part), next = nextDayVal(r.date, part);
+    r.activities.forEach(a => {
+      const k = a.typeId === 'ot' ? 'ot:' + (a.otherName || 'その他') : a.typeId;
+      const o = by[k] ||= { name: actName(a), n: 0, d: [], a: [], x: [], int: {} };
+      o.n++;
+      const dv = setLevel(a.during, part); if (dv != null) o.d.push(dv);
+      if (after != null) o.a.push(after);
+      if (next != null) o.x.push(next);
+      const it = o.int[groupOf(a.intensity || 3)] ||= { n: 0, a: [], x: [] };
+      it.n++; if (after != null) it.a.push(after); if (next != null) it.x.push(next);
+      (a.moves || []).forEach(m => { const q = mv[m] ||= { name: m, n: 0, d: [] }; q.n++; if (dv != null) q.d.push(dv); });
+    });
+  });
+  const types = Object.values(by).map(o => ({ name: o.name, n: o.n, d: avg(o.d), a: avg(o.a), x: avg(o.x),
+    int: Object.fromEntries(Object.entries(o.int).map(([k, v]) => [k, { n: v.n, a: avg(v.a), x: avg(v.x) }])) })).sort((p, q) => q.n - p.n);
+  const moves = Object.values(mv).map(q => ({ name: q.name, days: q.n, avg: avg(q.d) })).sort((a, b) => b.days - a.days);
+  const dayList = [];
+  for (let ds = from < '2026-09-01' ? '2026-09-01' : from; ds <= TODAY; ds = addDays(ds, 1)) {
+    const exr = recordsOn(ds).filter(r => r.kind === 'exercise');
+    dayList.push({ ds, v: dayMax(ds, part), acts: exr.flatMap(r => r.activities.map(actName)), mins: exr.reduce((s, r) => s + r.activities.reduce((t, a) => t + (a.minutes || 0), 0), 0) });
+  }
+  const wk = {};
+  dayList.forEach(d => { const k = addDays(d.ds, -((parse(d.ds).getDay() + 6) % 7)); const w = wk[k] ||= { wk: k, mins: 0, vals: [] }; w.mins += d.mins; if (d.v != null) w.vals.push(d.v); });
+  const weeks = Object.values(wk).map(w => ({ wk: w.wk, mins: w.mins, avg: avg(w.vals) }));
+  const exDays = new Set(state.records.filter(r => r.kind === 'exercise').map(r => r.date));
+  const cons = [], gap = [];
+  [...exDays].filter(ds => ds >= from && ds < TODAY).forEach(ds => { const nv = nextDayVal(ds, part); if (nv == null) return; (exDays.has(addDays(ds, -1)) ? cons : gap).push(nv); });
+  const parts = PARTS.map(p => {
+    const ls = recs.flatMap(setsOf).flatMap(s => s.none ? [] : s.items.filter(i => i.partId === p.id && i.level > 0).map(i => i.level));
+    const daysWith = new Set(recs.filter(r => setsOf(r).some(s => !s.none && s.items.some(i => i.partId === p.id && i.level > 0))).map(r => r.date)).size;
+    return { name: p.name, days: daysWith, avg: avg(ls) };
+  }).filter(p => p.days > 0).sort((a, b) => b.days - a.days);
+  const vals = dayList.map(d => d.v).filter(v => v != null);
+  return {
+    types, moves, dayList, weeks, parts,
+    cons: { n: cons.length, avg: avg(cons) }, gap: { n: gap.length, avg: avg(gap) },
+    exCount: recs.filter(r => r.kind === 'exercise').reduce((s, r) => s + r.activities.length, 0),
+    avgPain: avg(vals), highDays: vals.filter(v => v >= 7).length,
+  };
+}
+const f1 = v => v == null ? '–' : v.toFixed(1);
+
+function barPath(x, y, w, h, r) { r = Math.min(r, w, h / 2); if (w <= 0) return ''; return `M${x},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h - r}Q${x + w},${y + h} ${x + w - r},${y + h}H${x}Z`; }
+
+function typeChart(types) {
+  const W = 480, L = 104, R = 30, rowH = 44, top = 22, barH = 9, gap = 2;
+  const H = top + types.length * rowH + 6;
+  const sx = v => L + (W - L - R) * v / 10;
+  let g = '';
+  for (let t = 0; t <= 10; t += 2) g += `<line x1="${sx(t)}" x2="${sx(t)}" y1="${top - 4}" y2="${H - 4}" stroke="var(--grid)" stroke-width="1"/><text x="${sx(t)}" y="${top - 9}" text-anchor="middle" class="num">${t}</text>`;
+  const keys = [['d', 'var(--s1)', '運動中'], ['a', 'var(--s2)', '運動後'], ['x', 'var(--s3)', '翌日']];
+  types.forEach((t, i) => {
+    const y0 = top + i * rowH + 6;
+    g += `<text class="lab" x="0" y="${y0 + 12}">${esc(t.name.length > 7 ? t.name.slice(0, 7) + '…' : t.name)}</text><text x="0" y="${y0 + 27}" class="num">${t.n}回${t.n < 3 ? '・参考' : ''}</text>`;
+    keys.forEach(([k, c], j) => {
+      const y = y0 + j * (barH + gap), v = t[k];
+      if (v != null && v > 0) g += `<path d="${barPath(L, y, sx(v) - L, barH, 4)}" fill="${c}"/>`;
+      else if (v === 0) g += `<rect x="${L}" y="${y}" width="2" height="${barH}" fill="${c}"/>`;
+    });
+    g += `<rect x="0" y="${y0 - 4}" width="${W}" height="${rowH}" fill="transparent" data-tip="<b>${esc(t.name)}</b>（${t.n}回）<br>運動中 ${f1(t.d)} ／ 運動後 ${f1(t.a)} ／ 翌日 ${f1(t.x)}"/>`;
+  });
+  g += `<line x1="${L}" x2="${L}" y1="${top - 4}" y2="${H - 4}" stroke="var(--muted)" stroke-width="1"/>`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="運動の種類別 痛みの平均">${g}</svg>`;
+}
+
+function trendChart(days) {
+  const W = 480, H = 190, L = 24, R = 10, T = 10, B = 24;
+  const n = days.length, sx = i => L + (W - L - R) * (n <= 1 ? 0 : i / (n - 1)), sy = v => T + (H - T - B) * (1 - v / 10);
+  let g = '';
+  for (let t = 0; t <= 10; t += 5) g += `<line x1="${L}" x2="${W - R}" y1="${sy(t)}" y2="${sy(t)}" stroke="var(--grid)"/><text x="${L - 6}" y="${sy(t) + 4}" text-anchor="end" class="num">${t}</text>`;
+  const step = Math.max(1, Math.ceil(n / 5));
+  days.forEach((d, i) => { if (i % step === 0) { const dt = parse(d.ds); g += `<text x="${sx(i)}" y="${H - 6}" text-anchor="middle" class="num">${dt.getMonth() + 1}/${dt.getDate()}</text>`; } });
+  const pts = days.map((d, i) => d.v == null ? null : [sx(i), sy(d.v)]).filter(Boolean);
+  if (pts.length) {
+    g += `<path d="M${pts[0][0]},${sy(0)} ${pts.map(p => 'L' + p.join(',')).join(' ')} L${pts.at(-1)[0]},${sy(0)}Z" fill="var(--s2)" opacity=".12"/>`;
+    g += `<path d="${pts.map((p, i) => (i ? 'L' : 'M') + p.join(',')).join(' ')}" fill="none" stroke="var(--s2)" stroke-width="2" stroke-linejoin="round"/>`;
+  }
+  days.forEach((d, i) => { if (d.v != null && d.acts.length) g += `<circle cx="${sx(i)}" cy="${sy(d.v)}" r="4" fill="var(--s2)" stroke="var(--surface)" stroke-width="2"/>`; });
+  const w = (W - L - R) / Math.max(1, n - 1);
+  days.forEach((d, i) => { g += `<rect x="${sx(i) - w / 2}" y="${T}" width="${w}" height="${H - T - B}" fill="transparent" data-tip="<b>${jpDate(d.ds)}</b><br>痛み最大 ${d.v ?? '記録なし'}${d.acts.length ? '<br>' + esc(d.acts.join('・')) : ''}" data-x="${sx(i)}"/>`; });
+  g += `<line id="xh" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="var(--muted)" stroke-dasharray="3 3" visibility="hidden"/>`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="痛みの推移">${g}</svg>`;
+}
+
+function partChart(parts, unit = '日', avgLabel = '平均') {
+  const W = 480, L = 130, R = 70, rowH = 26, H = parts.length * rowH + 4;
+  const mx = Math.max(1, ...parts.map(p => p.days)), sx = v => (W - L - R) * v / mx;
+  let g = '';
+  parts.forEach((p, i) => {
+    const y = i * rowH + 4;
+    g += `<text class="lab" x="0" y="${y + 13}">${esc(p.name)}</text><path d="${barPath(L, y + 2, sx(p.days), 14, 4)}" fill="var(--s1)"/><text x="${L + sx(p.days) + 6}" y="${y + 13}" class="num">${p.days}${unit}・${avgLabel}${f1(p.avg)}</text>`;
+  });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="部位別">${g}</svg>`;
+}
+
+function vbar(x, y, w, h, r) { r = Math.min(r, w / 2, h); if (h <= 0) return ''; return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`; }
+function intensityChart(types) {
+  const rows = types.filter(t => Object.keys(t.int).length >= 2);
+  if (!rows.length) return '<p class="muted">強度を変えた記録がまだ少ないため表示できません。</p>';
+  const G = intGroups(), W = 480, L = 104, R = 30, top = 22, barH = G.length > 3 ? 7 : 9, gap = 2;
+  const rowH = Math.max(44, G.length * (barH + gap) + 14);
+  const H = top + rows.length * rowH + 6, sx = v => L + (W - L - R) * v / 10;
+  let g = '';
+  for (let t = 0; t <= 10; t += 2) g += `<line x1="${sx(t)}" x2="${sx(t)}" y1="${top - 4}" y2="${H - 4}" stroke="var(--grid)"/><text x="${sx(t)}" y="${top - 9}" text-anchor="middle" class="num">${t}</text>`;
+  rows.forEach((t, i) => {
+    const y0 = top + i * rowH + 6;
+    g += `<text class="lab" x="0" y="${y0 + 12}">${esc(t.name.length > 7 ? t.name.slice(0, 7) + '…' : t.name)}</text>`;
+    const few = G.some(k => t.int[k.id] && t.int[k.id].n < 3);
+    g += few ? `<text x="0" y="${y0 + 27}">一部参考値</text>` : '';
+    G.forEach((k, j) => {
+      const v = t.int[k.id]?.a, y = y0 + j * (barH + gap);
+      const op = t.int[k.id] && t.int[k.id].n < 3 ? ' opacity=".45"' : '';
+      if (v != null && v > 0) g += `<path d="${barPath(L, y, sx(v) - L, barH, 3)}" fill="${k.color}"${op}/>`;
+      else if (v === 0) g += `<rect x="${L}" y="${y}" width="2" height="${barH}" fill="${k.color}"${op}/>`;
+    });
+    g += `<rect x="0" y="${y0 - 4}" width="${W}" height="${rowH}" fill="transparent" data-tip="<b>${esc(t.name)}</b> 運動後の痛み<br>${G.map(k => t.int[k.id] ? `${k.name}: ${f1(t.int[k.id].a)}（${t.int[k.id].n}回${t.int[k.id].n < 3 ? '・参考' : ''}／翌日 ${f1(t.int[k.id].x)}）` : `${k.name}: 記録なし`).join('<br>')}"/>`;
+  });
+  g += `<line x1="${L}" x2="${L}" y1="${top - 4}" y2="${H - 4}" stroke="var(--muted)"/>`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="強度別 運動後の痛み">${g}</svg>`;
+}
+function weeklyChart(weeks) {
+  const W = 480, L = 34, R = 8, H1 = 100, H2 = 96, G = 22, B = 20, n = weeks.length;
+  const bw = (W - L - R) / n, cx = i => L + bw * i + bw / 2;
+  const mtop = Math.max(60, Math.ceil(Math.max(...weeks.map(w => w.mins)) / 60) * 60);
+  const y1 = v => 20 + (H1 - 20) * (1 - v / mtop);
+  const p2 = H1 + G, y2 = v => p2 + 20 + (H2 - 20) * (1 - v / 10);
+  let g = `<text x="0" y="10" class="lab">運動時間（分／週）</text><text x="0" y="${p2 + 10}" class="lab">痛みの平均（日ごとの最大値）</text>`;
+  [0, mtop / 2, mtop].forEach(t => { g += `<line x1="${L}" x2="${W - R}" y1="${y1(t)}" y2="${y1(t)}" stroke="var(--grid)"/><text x="${L - 6}" y="${y1(t) + 4}" text-anchor="end" class="num">${t}</text>`; });
+  [0, 5, 10].forEach(t => { g += `<line x1="${L}" x2="${W - R}" y1="${y2(t)}" y2="${y2(t)}" stroke="var(--grid)"/><text x="${L - 6}" y="${y2(t) + 4}" text-anchor="end" class="num">${t}</text>`; });
+  const w = Math.min(22, bw * 0.6);
+  weeks.forEach((wk, i) => { g += `<path d="${vbar(cx(i) - w / 2, y1(wk.mins), w, y1(0) - y1(wk.mins), 4)}" fill="var(--s1)"/>`; });
+  const pts = weeks.map((wk, i) => wk.avg == null ? null : [cx(i), y2(wk.avg)]).filter(Boolean);
+  if (pts.length) g += `<path d="${pts.map((p, i) => (i ? 'L' : 'M') + p.join(',')).join(' ')}" fill="none" stroke="var(--s2)" stroke-width="2" stroke-linejoin="round"/>` + pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="var(--s2)" stroke="var(--surface)" stroke-width="2"/>`).join('');
+  const step = Math.max(1, Math.ceil(n / 6));
+  weeks.forEach((wk, i) => {
+    const d = parse(wk.wk);
+    if (i % step === 0) g += `<text x="${cx(i)}" y="${p2 + H2 + 14}" text-anchor="middle" class="num">${d.getMonth() + 1}/${d.getDate()}</text>`;
+    g += `<rect x="${L + bw * i}" y="0" width="${bw}" height="${p2 + H2}" fill="transparent" data-tip="<b>${d.getMonth() + 1}/${d.getDate()}〜の週</b><br>運動 ${wk.mins}分<br>痛みの平均 ${f1(wk.avg)}"/>`;
+  });
+  return `<svg class="chart" viewBox="0 0 ${W} ${p2 + H2 + B}" role="img" aria-label="週ごとの運動量と痛み">${g}</svg>`;
+}
+function renderGraph() {
+  const s = stats();
+  const ranked = s.types.filter(t => t.n >= 3 && t.a != null).sort((a, b) => b.a - a.a);
+  const top = ranked[0], low = ranked.at(-1);
+  app.innerHTML = `
+    <header class="top"><h1>グラフ</h1></header>
+    <div class="section" style="display:grid;gap:12px">
+      <div class="filters">
+        <select class="inp" id="g-period" aria-label="期間">${[['30', '直近30日'], ['90', '直近90日'], ['all', '全期間']].map(([v, l]) => `<option value="${v}" ${state.period === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+        <select class="inp" id="g-part" aria-label="部位"><option value="">全部位</option>${PARTS.map(p => `<option value="${p.id}" ${state.part === p.id ? 'selected' : ''}>${p.name}</option>`).join('')}</select>
+      </div>
+      <div class="tiles">
+        <div class="tile"><div class="k">運動回数</div><div class="v">${s.exCount}<small>回</small></div></div>
+        <div class="tile"><div class="k">痛みの平均</div><div class="v">${f1(s.avgPain)}<small>/10</small></div></div>
+        <div class="tile"><div class="k">痛み7以上</div><div class="v">${s.highDays}<small>日</small></div></div>
+      </div>
+      <div class="chartcard">
+        <h2>運動の種類別 痛みの平均</h2>
+        ${top ? `<p class="insight" style="margin:0">運動後の痛みが最も高いのは<b>${esc(top.name)}</b>（平均 ${f1(top.a)}）、低いのは<b>${esc(low.name)}</b>（平均 ${f1(low.a)}）。</p>` : ''}
+        <div class="keys"><span><i style="background:var(--s1)"></i>運動中</span><span><i style="background:var(--s2)"></i>運動後</span><span><i style="background:var(--s3)"></i>翌日</span></div>
+        ${s.types.length ? typeChart(s.types) : '<p class="muted">この期間の運動記録がありません。</p>'}
+        <details class="tbl"><summary>表で見る</summary><div class="tblwrap"><table><tr><th>運動</th><th>回数</th><th>運動中</th><th>運動後</th><th>翌日</th></tr>${s.types.map(t => `<tr><td>${esc(t.name)}</td><td>${t.n}</td><td>${f1(t.d)}</td><td>${f1(t.a)}</td><td>${f1(t.x)}</td></tr>`).join('')}</table></div></details>
+      </div>
+      <div class="chartcard">
+        <h2>強度別 運動後の痛み</h2>
+        <p class="small muted" style="margin:0">同じ運動でも、強度で痛みがどう変わるか。タップで翌日の値も表示します。薄い棒は 3 回未満の参考値です。</p>
+        <div class="row" style="justify-content:space-between"><div class="keys">${intGroups().map(k => `<span><i style="background:${k.color}"></i>${k.name}</span>`).join('')}</div>
+        <span class="seg">${[['3', '3つにまとめる'], ['5', '5段階']].map(([v, l]) => `<button type="button" data-iv="${v}" aria-pressed="${settings.intView === v}">${l}</button>`).join('')}</span></div>
+        ${intensityChart(s.types)}
+      </div>
+      <div class="chartcard">
+        <h2>痛んだ動き</h2>
+        <p class="small muted" style="margin:0">記録された回数と、そのときの運動中の痛みの平均</p>
+        ${s.moves.length ? partChart(s.moves, '回', '運動中') : '<p class="muted">この期間に「痛んだ動き」の記録がありません。</p>'}
+      </div>
+      <div class="chartcard">
+        <h2>痛みの推移（日ごとの最大値）</h2>
+        <div class="keys"><span>● 運動した日　タップで内容を表示</span></div>
+        ${trendChart(s.dayList)}
+      </div>
+      <div class="chartcard">
+        <h2>週ごとの運動量と痛み</h2>
+        ${weeklyChart(s.weeks)}
+      </div>
+      <div class="chartcard">
+        <h2>連日運動の影響（翌日の痛み）</h2>
+        <div class="tiles" style="grid-template-columns:1fr 1fr">
+          <div class="tile"><div class="k">前日も運動した日の翌日</div><div class="v">${f1(s.cons.avg)}<small>/10</small></div><div class="k num">${s.cons.n}回</div></div>
+          <div class="tile"><div class="k">間を空けた日の翌日</div><div class="v">${f1(s.gap.avg)}<small>/10</small></div><div class="k num">${s.gap.n}回</div></div>
+        </div>
+        ${s.cons.avg != null && s.gap.avg != null ? `<p class="insight" style="margin:0">連日運動したときの翌日の痛みは、間を空けたときより <b>${f1(Math.abs(s.cons.avg - s.gap.avg))}</b> ${s.cons.avg >= s.gap.avg ? '高い' : '低い'}です。</p>` : ''}
+      </div>
+      <div class="chartcard">
+        <h2>部位別 痛みが出た日数</h2>
+        ${s.parts.length ? partChart(s.parts) : '<p class="muted">この期間に痛みの記録がありません。</p>'}
+      </div>
+      <p class="small muted" style="margin:0">集計ルール: 1つのタイミングに複数の痛みがあるときは最大値。「痛みなし」は 0、未記入は集計しません。翌日＝翌日の起床時の記録（なければその日の最大値）。</p>
+    </div>`;
+  $('#g-period').onchange = e => { state.period = e.target.value; render(); };
+  $('#g-part').onchange = e => { state.part = e.target.value; render(); };
+  app.querySelectorAll('[data-iv]').forEach(b => b.onclick = () => { settings.intView = b.dataset.iv; render(); });
+  bindTips();
+}
+function bindTips() {
+  app.querySelectorAll('[data-tip]').forEach(el => {
+    const show = e => {
+      tip.innerHTML = el.dataset.tip; tip.hidden = false;
+      const p = e.touches ? e.touches[0] : e;
+      const x = Math.min(p.clientX + 12, innerWidth - tip.offsetWidth - 8);
+      tip.style.left = Math.max(8, x) + 'px'; tip.style.top = Math.max(8, p.clientY - tip.offsetHeight - 12) + 'px';
+      const xh = el.ownerSVGElement.querySelector('#xh');
+      if (xh && el.dataset.x) { xh.setAttribute('x1', el.dataset.x); xh.setAttribute('x2', el.dataset.x); xh.setAttribute('visibility', 'visible'); }
+    };
+    el.addEventListener('pointermove', show); el.addEventListener('pointerdown', show);
+    el.addEventListener('pointerleave', () => { tip.hidden = true; const xh = el.ownerSVGElement.querySelector('#xh'); if (xh) xh.setAttribute('visibility', 'hidden'); });
+  });
+}
+
+/* ---------- settings ---------- */
+function renderSettings() {
+  if (state.sub) return renderMaster(state.sub);
+  const seg = (key, opts) => `<span class="seg">${opts.map(([v, l]) => `<button type="button" data-set-k="${key}" data-set-v="${v}" aria-pressed="${String(settings[key]) === v}">${l}</button>`).join('')}</span>`;
+  app.innerHTML = `
+    <header class="top"><h1>設定</h1></header>
+    <div class="section">
+      <div class="grp">入力の候補（追加・非表示ができます）</div>
+      <div class="list">
+        <div><h3>運動の種類</h3><button class="btn small" data-sub="types">${TYPES.filter(t => !t.hidden).length}件 ›</button></div>
+        <div><h3>痛みの部位</h3><button class="btn small" data-sub="parts">${PARTS.filter(t => !t.hidden).length}件 ›</button></div>
+        <div><h3>痛みの種類タグを使う</h3>${seg('useTags', [['false', 'オフ'], ['true', 'オン']])}</div>
+        ${settings.useTags ? `<div><h3>痛みの種類タグ</h3><button class="btn small" data-sub="tags">${settings.tags.length}件 ›</button></div>` : ''}
+        <div><h3>痛んだ動き</h3><button class="btn small" data-sub="moves">${settings.moves.length}件 ›</button></div>
+        <div><h3>「続けて追加」の目安</h3>${seg('gapMin', [['30', '30分'], ['60', '60分']])}</div>
+      </div>
+      <div class="grp">表示</div>
+      <div class="list">
+        <div><h3>強度グラフの表示</h3>${seg('intView', [['3', '3つにまとめる'], ['5', '5段階']])}</div>
+        <div><h3>カレンダーの数字</h3>${seg('calMode', [['max', '最大値'], ['avg', '平均']])}</div>
+        <div><h3>週の始まり</h3><span class="small muted">月曜</span></div>
+      </div>
+      <div class="grp">データ</div>
+      <div class="list">
+        <div><h3>バックアップを書き出す</h3><button class="btn small" data-mock>書き出す</button></div>
+        <div><h3>バックアップから読み込む</h3><button class="btn small" data-mock>読み込む</button></div>
+        <div><span class="small muted">最終バックアップ: 2026年10月28日</span></div>
+      </div>
+      <p class="small muted">データはこのスマホの中に保存されます。機種変更のときは「書き出す」で iCloud Drive などにファイルを保存し、新しいスマホで「読み込む」と引き継げます。</p>
+    </div>`;
+  app.querySelectorAll('[data-mock]').forEach(b => b.onclick = () => toast('モックのため動作しません'));
+  app.querySelectorAll('[data-sub]').forEach(b => b.onclick = () => { state.sub = b.dataset.sub; render(); });
+  app.querySelectorAll('[data-set-k]').forEach(b => b.onclick = () => {
+    const k = b.dataset.setK, v = b.dataset.setV;
+    settings[k] = v === 'true' ? true : v === 'false' ? false : /^\d+$/.test(v) ? +v : v;
+    toast('変更しました'); render();
+  });
+}
+function renderMaster(kind) {
+  const title = { types: '運動の種類', parts: '痛みの部位', tags: '痛みの種類タグ', moves: '痛んだ動き' }[kind];
+  const strList = kind === 'tags' || kind === 'moves';
+  const items = strList ? settings[kind].map(t => ({ id: t, name: t })) : (kind === 'types' ? TYPES : PARTS);
+  app.innerHTML = `
+    <header class="top"><button class="iconbtn" id="m-back" aria-label="戻る">‹</button><h1>${title}</h1></header>
+    <div class="section" style="display:grid;gap:12px">
+      <div class="list">${items.map((t, i) => `<div><h3 style="${t.hidden ? 'opacity:.45;text-decoration:line-through' : ''}">${esc(t.name)}${kind === 'types' ? `<span class="small muted">　${esc(t.short)}</span>` : ''}</h3>
+        ${strList ? `<button class="btn small danger" data-del="${i}">削除</button>` : `<button class="btn small" data-hide="${i}">${t.hidden ? '表示する' : '非表示'}</button>`}</div>`).join('')}</div>
+      <form class="row" id="m-add"><input class="inp" id="m-name" style="flex:1" placeholder="追加する名前（例: ${kind === 'types' ? 'ピラティス' : kind === 'parts' ? 'ふくらはぎ' : kind === 'moves' ? 'ターン' : 'しびれ'}）" required><button class="btn primary">追加</button></form>
+      <p class="small muted" style="margin:0">非表示にしても、過去の記録とグラフには残ります。${kind === 'types' ? 'カレンダーには名前の先頭2文字を表示します。' : ''}</p>
+    </div>`;
+  $('#m-back').onclick = () => { state.sub = null; render(); };
+  app.querySelectorAll('[data-hide]').forEach(b => b.onclick = () => { items[+b.dataset.hide].hidden = !items[+b.dataset.hide].hidden; render(); });
+  app.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { settings[kind].splice(+b.dataset.del, 1); render(); });
+  $('#m-add').onsubmit = e => {
+    e.preventDefault(); const name = $('#m-name').value.trim(); if (!name) return;
+    if (strList) settings[kind].push(name);
+    else if (kind === 'types') TYPES.splice(TYPES.length - 1, 0, { id: 'u' + uid(), name, short: name.slice(0, 2), min: 30 });
+    else PARTS.splice(PARTS.length - 1, 0, { id: 'u' + uid(), name });
+    toast(`「${name}」を追加しました`); render();
+  };
+}
+
+/* ---------- shell ---------- */
+function render() {
+  document.querySelectorAll('.tab').forEach(t => { if (t.dataset.tab === state.tab) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current'); });
+  $('#fab').hidden = state.tab === 'settings';
+  tip.hidden = true;
+  if (state.tab === 'calendar') renderCalendar(); else if (state.tab === 'graph') renderGraph(); else renderSettings();
+}
+let toastT;
+function toast(msg) { document.querySelector('.toast')?.remove(); const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600); }
+
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => { state.tab = t.dataset.tab; state.sub = null; scrollTo(0, 0); render(); });
+const fab = $('#fab'), fm = $('#fabmenu');
+fab.onclick = () => { fm.hidden = !fm.hidden; fab.setAttribute('aria-expanded', String(!fm.hidden)); fab.textContent = fm.hidden ? '＋' : '×'; };
+const closeFab = () => { fm.hidden = true; fab.textContent = '＋'; fab.setAttribute('aria-expanded', 'false'); };
+$('#fab-ex').onclick = () => { closeFab(); openForm(newRecord('exercise', TODAY)); };
+$('#fab-pain').onclick = () => { closeFab(); openForm(newRecord('pain', TODAY)); };
+addEventListener('resize', () => { tip.hidden = true; });
+render();
+})();
+</script>
