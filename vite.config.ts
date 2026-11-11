@@ -17,8 +17,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon-180x180.png'],
       manifest: {
-        name: '股関節ペインログ',
-        short_name: 'ペインログ',
+        name: 'うごログ - 運動と股関節の痛み記録',
+        short_name: 'うごログ',
         description: '運動と股関節の痛みを記録して、カレンダーとグラフで傾向を見るアプリ',
         lang: 'ja',
         display: 'standalone',
