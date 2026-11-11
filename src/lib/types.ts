@@ -5,7 +5,7 @@ export interface PainItem {
   side: Side
   level: number // 0〜10
   tags?: string[]
-  moves?: string[] // 痛んだ動き（運動中の痛みだけで使う）
+  moves?: string[] // 痛んだ動き（運動中は Settings.moves、それ以外は Settings.dailyMoves から選ぶ）
 }
 
 /** none=true → 痛みなし(0)。none=false かつ items が空 → 未記入 */
@@ -73,6 +73,7 @@ export interface Settings {
   useTags: boolean
   tags: string[]
   moves: string[]
+  dailyMoves: string[]
   intView: '3' | '5'
   gapMin: number
   lastSide: Side

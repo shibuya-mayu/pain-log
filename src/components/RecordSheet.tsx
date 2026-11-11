@@ -102,7 +102,7 @@ function PainFields({ d, set }: { d: PainDraft; set: (d: PainDraft) => void }) {
       </div>
       <div className="card">
         <h3>痛み</h3>
-        <PainSetEditor idPrefix="pain" value={d.pain} onChange={(pain) => set({ ...d, pain })} />
+        <PainSetEditor idPrefix="pain" moves="daily" value={d.pain} onChange={(pain) => set({ ...d, pain })} />
       </div>
       <div className="card">
         <div className="field">
@@ -198,7 +198,7 @@ function ExerciseFields({ d, set, onSwitch, scrollRef }: { d: ExerciseDraft; set
 
       <div className="card">
         <h3><span className="step">運動前</span>運動前の痛み</h3>
-        <PainSetEditor idPrefix="before" value={d.before} onChange={(before) => set({ ...d, before })} />
+        <PainSetEditor idPrefix="before" moves="daily" value={d.before} onChange={(before) => set({ ...d, before })} />
       </div>
 
       {d.activities.map((a, i) => (
@@ -222,7 +222,7 @@ function ExerciseFields({ d, set, onSwitch, scrollRef }: { d: ExerciseDraft; set
 
       <div className="card">
         <h3><span className="step">運動後</span>運動後の痛み</h3>
-        <PainSetEditor idPrefix="after" value={d.after} onChange={(after) => set({ ...d, after })} />
+        <PainSetEditor idPrefix="after" moves="daily" value={d.after} onChange={(after) => set({ ...d, after })} />
       </div>
 
       <div className="card">
@@ -322,7 +322,7 @@ function ActivityCard({ i, a, count, excludeId, otherNames, onChange, onRemove }
           <span className="small muted">目安: {intensity.hint}</span>
         </div>
         <div className="lbl">運動中の痛み</div>
-        <PainSetEditor idPrefix={`act-${i}`} showMoves value={a.during} onChange={(during) => onChange({ during })} />
+        <PainSetEditor idPrefix={`act-${i}`} moves="exercise" value={a.during} onChange={(during) => onChange({ during })} />
       </div>
     </>
   )

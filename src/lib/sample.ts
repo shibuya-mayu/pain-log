@@ -15,6 +15,7 @@ export function makeSample(): LogRecord[] {
   const prof: Record<string, number[]> = { bodyattack: [4, 5, 4], bodycombat: [3, 4, 3], bodypump: [2, 3, 2], bodystep: [3, 4, 3], yoga: [1, 1, 1], pool: [0, 1, 1], running: [4, 5, 4], tabletennis: [2, 3, 2], hiking: [3, 5, 5] }
   const mins: Record<string, number> = { bodyattack: 55, bodycombat: 55, bodypump: 60, bodystep: 55, yoga: 45, pool: 30, running: 30, tabletennis: 60, hiking: 180 }
   const MV: Record<string, string[]> = { bodyattack: ['ジャンプ', 'ランジ'], bodycombat: ['キック', 'ひねり'], bodypump: ['スクワット', 'ランジ'], bodystep: ['ステップ昇降', 'ランジ'], tabletennis: ['切り返し'], running: ['着地'], hiking: ['下り坂', 'ステップ昇降'], yoga: ['開脚', '片脚立ち'], pool: ['キック'] }
+  const DAILY = ['歩き始め', '寝返り', '立ち上がる', '歩いている時', '階段を下りる']
   const pick = ['bodyattack', 'bodyattack', 'bodycombat', 'bodycombat', 'bodypump', 'bodypump', 'bodystep', 'yoga', 'yoga', 'pool', 'running', 'tabletennis', 'hiking']
   const MOD: Record<Intensity, number> = { 1: -2, 2: -1, 3: 0, 4: 0.7, 5: 1.3 }
   const j = () => Math.round((r() - 0.5) * 2.4)
@@ -30,7 +31,11 @@ export function makeSample(): LogRecord[] {
   for (let ds = addDays(end, -90); ds <= end; ds = addDays(ds, 1)) {
     const dow = parse(ds).getDay()
     const base = carry ?? Math.round(r() * 2)
-    if (carry != null || r() < 0.45) recs.push({ id: newId(), kind: 'pain', date: ds, timing: 'wake', pain: mk(base), createdAt: ts, updatedAt: ts })
+    if (carry != null || r() < 0.45) {
+      const wake = mk(base)
+      if (!wake.none && wake.items[0].level >= 2 && r() < 0.6) wake.items[0].moves = [DAILY[Math.floor(r() * DAILY.length)]]
+      recs.push({ id: newId(), kind: 'pain', date: ds, timing: 'wake', pain: wake, createdAt: ts, updatedAt: ts })
+    }
     carry = null
     if (ds === end) break
     if (r() < (dow === 0 || dow === 6 ? 0.75 : 0.5)) {

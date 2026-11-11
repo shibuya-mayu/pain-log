@@ -5,6 +5,7 @@
 
 - 仕様: [docs/requirements.md](docs/requirements.md)
 - 画面モック: [mock/index.html](mock/index.html)
+- Windows での環境構築: [docs/環境構築手順.md](docs/環境構築手順.md)
 
 ## 開発
 

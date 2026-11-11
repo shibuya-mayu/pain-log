@@ -83,10 +83,36 @@ export interface TypeStat {
   byIntensity: Record<string, { n: number; after: number | null; next: number | null }>
 }
 
+/** 痛んだ動き: 記録された回数、そのときの痛みの平均、部位ごとの回数 */
+export type MoveStat = { name: string; n: number; avg: number | null; parts: { id: string; n: number }[] }
+
+type MoveAcc = Map<string, { n: number; d: number[]; parts: Map<string, number> }>
+
+function addMoves(mv: MoveAcc, s: PainSet, part: string | null) {
+  if (s.none) return
+  for (const item of s.items) {
+    if (part && item.partId !== part) continue
+    for (const m of item.moves ?? []) {
+      let q = mv.get(m)
+      if (!q) mv.set(m, (q = { n: 0, d: [], parts: new Map() }))
+      q.n++
+      q.d.push(item.level)
+      q.parts.set(item.partId, (q.parts.get(item.partId) ?? 0) + 1)
+    }
+  }
+}
+
+const moveList = (mv: MoveAcc): MoveStat[] =>
+  [...mv.entries()]
+    .map(([name, q]) => ({ name, n: q.n, avg: avg(q.d), parts: [...q.parts.entries()].map(([id, n]) => ({ id, n })).sort((a, b) => b.n - a.n) }))
+    .sort((a, b) => b.n - a.n)
+
 export interface Stats {
   types: TypeStat[]
-  /** 痛んだ動き: 記録された回数、そのときの痛みの平均、部位ごとの回数 */
-  moves: { name: string; n: number; avg: number | null; parts: { id: string; n: number }[] }[]
+  /** 運動中に痛んだ動き */
+  moves: MoveStat[]
+  /** 日常で痛んだ動き（痛みだけの記録・運動前・運動後） */
+  dailyMoves: MoveStat[]
   days: { ds: string; v: number | null; acts: string[]; minutes: number }[]
   weeks: { week: string; minutes: number; avg: number | null }[]
   parts: { id: string; days: number; avg: number | null }[]
@@ -111,7 +137,15 @@ export function computeStats(records: LogRecord[], idx: ByDate, o: StatsOptions)
   const exercises = inRange.filter((r): r is ExerciseRecord => r.kind === 'exercise')
 
   const by = new Map<string, { name: string; n: number; d: number[]; a: number[]; x: number[]; int: Map<string, { n: number; a: number[]; x: number[] }> }>()
-  const mv = new Map<string, { n: number; d: number[]; parts: Map<string, number> }>()
+  const mv: MoveAcc = new Map()
+  const dmv: MoveAcc = new Map()
+  for (const r of inRange) {
+    if (r.kind === 'pain') addMoves(dmv, r.pain, part)
+    else {
+      addMoves(dmv, r.before, part)
+      addMoves(dmv, r.after, part)
+    }
+  }
 
   for (const r of exercises) {
     const after = setLevel(r.after, part)
@@ -131,18 +165,7 @@ export function computeStats(records: LogRecord[], idx: ByDate, o: StatsOptions)
       gi.n++
       if (after != null) gi.a.push(after)
       if (next != null) gi.x.push(next)
-      if (!a.during.none) {
-        for (const item of a.during.items) {
-          if (part && item.partId !== part) continue
-          for (const m of item.moves ?? []) {
-            let q = mv.get(m)
-            if (!q) mv.set(m, (q = { n: 0, d: [], parts: new Map() }))
-            q.n++
-            q.d.push(item.level)
-            q.parts.set(item.partId, (q.parts.get(item.partId) ?? 0) + 1)
-          }
-        }
-      }
+      addMoves(mv, a.during, part)
     }
   }
 
@@ -156,10 +179,6 @@ export function computeStats(records: LogRecord[], idx: ByDate, o: StatsOptions)
       next: avg(t.x),
       byIntensity: Object.fromEntries([...t.int.entries()].map(([g, v]) => [g, { n: v.n, after: avg(v.a), next: avg(v.x) }])),
     }))
-    .sort((a, b) => b.n - a.n)
-
-  const moves = [...mv.entries()]
-    .map(([name, q]) => ({ name, n: q.n, avg: avg(q.d), parts: [...q.parts.entries()].map(([id, n]) => ({ id, n })).sort((a, b) => b.n - a.n) }))
     .sort((a, b) => b.n - a.n)
 
   // 日ごと: 最初の記録日より前は含めない
@@ -217,7 +236,8 @@ export function computeStats(records: LogRecord[], idx: ByDate, o: StatsOptions)
   const vals = days.map((d) => d.v).filter((v): v is number => v != null)
   return {
     types,
-    moves,
+    moves: moveList(mv),
+    dailyMoves: moveList(dmv),
     days,
     weeks,
     parts,

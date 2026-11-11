@@ -115,8 +115,34 @@ describe('手で答え合わせできる例（README の確認手順と同じデ
     expect(s.types).toEqual([expect.objectContaining({ name: 'ボディアタック', n: 2, during: 4, after: 3, next: 1.5 })])
     expect(s.types[0].byIntensity).toEqual({ H: { n: 1, after: 4, next: 3 }, L: { n: 1, after: 2, next: 0 } })
     expect(s.moves).toEqual([{ name: 'ジャンプ', n: 1, avg: 6, parts: [{ id: 'groin', n: 1 }] }])
+    expect(s.dailyMoves).toEqual([])
     expect(s.spaced).toEqual({ n: 2, avg: 1.5 })
     expect(s.consecutive).toEqual({ n: 0, avg: null })
     expect(s.parts).toEqual([{ id: 'groin', days: 3, avg: 3.4 }])
+  })
+})
+
+describe('日常で痛んだ動き', () => {
+  const recs: LogRecord[] = [
+    pain('a', '2026-05-01', p(['groin', 3, ['歩き始め']], ['buttock', 2, ['歩き始め', '寝返り']])),
+    ex('b', '2026-05-01', {
+      before: p(['groin', 2, ['歩いている時']]),
+      after: p(['groin', 5, ['歩き始め']]),
+      activities: [{ typeId: 'bodycombat', minutes: 55, intensity: 3, during: p(['groin', 6, ['キック']]) }],
+    }),
+  ]
+  const idx = indexByDate(recs)
+  const s = computeStats(recs, idx, { from: '2026-05-01', to: '2026-05-01', intView: '3', types: DEFAULT_TYPES })
+  it('運動中の動きと分けて、痛みだけの記録・運動前・運動後から集計する', () => {
+    expect(s.moves).toEqual([{ name: 'キック', n: 1, avg: 6, parts: [{ id: 'groin', n: 1 }] }])
+    expect(s.dailyMoves).toEqual([
+      { name: '歩き始め', n: 3, avg: 10 / 3, parts: [{ id: 'groin', n: 2 }, { id: 'buttock', n: 1 }] },
+      { name: '寝返り', n: 1, avg: 2, parts: [{ id: 'buttock', n: 1 }] },
+      { name: '歩いている時', n: 1, avg: 2, parts: [{ id: 'groin', n: 1 }] },
+    ])
+  })
+  it('部位で絞り込める', () => {
+    const g = computeStats(recs, idx, { from: '2026-05-01', to: '2026-05-01', intView: '3', types: DEFAULT_TYPES, part: 'buttock' })
+    expect(g.dailyMoves.map((m) => m.name)).toEqual(['歩き始め', '寝返り'])
   })
 })

@@ -9,12 +9,13 @@ interface Props {
   value: DraftPainSet
   onChange: (v: DraftPainSet) => void
   idPrefix: string
-  /** 運動中の痛みのとき true。行ごとに「痛んだ動き」を選べる */
-  showMoves?: boolean
+  /** 行ごとに「痛んだ動き」を選べるようにする。運動中は exercise、それ以外は daily の候補を出す */
+  moves?: 'exercise' | 'daily'
 }
 
-export function PainSetEditor({ value, onChange, idPrefix, showMoves }: Props) {
+export function PainSetEditor({ value, onChange, idPrefix, moves }: Props) {
   const { parts, settings } = useData()
+  const moveList = moves === 'exercise' ? settings.moves : moves === 'daily' ? settings.dailyMoves : []
   const visibleParts = parts.filter((p) => !p.hidden)
 
   const update = (i: number, patch: Partial<DraftPainSet['items'][number]>) =>
@@ -83,11 +84,11 @@ export function PainSetEditor({ value, onChange, idPrefix, showMoves }: Props) {
                 ))}
               </div>
               <div className="scale-cap"><span>0 なし</span><span>1–3 軽い</span><span>4–6 中くらい</span><span>7–10 強い</span></div>
-              {showMoves && settings.moves.length > 0 && (
+              {moveList.length > 0 && (
                 <div className="field">
                   <span className="lbl">この痛みが出た動き（あれば・複数可）</span>
                   <div className="quick" role="group" aria-label="痛んだ動き">
-                    {settings.moves.map((m) => {
+                    {moveList.map((m) => {
                       const on = it.moves?.includes(m) ?? false
                       return (
                         <button type="button" key={m} aria-pressed={on} onClick={() => update(i, { moves: on ? it.moves!.filter((x) => x !== m) : [...(it.moves ?? []), m] })}>

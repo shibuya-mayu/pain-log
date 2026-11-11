@@ -180,20 +180,28 @@ export function GraphPage() {
           />
         </section>
 
-        {/* 痛んだ動き */}
-        <section className="chartcard">
-          <h2>痛んだ動き</h2>
-          <p className="small muted">記録された回数と、そのときの痛みの平均。部位で絞り込むと、その部位が痛んだ動きだけになります。</p>
-          {s.moves.length ? (
-            <HBar
-              data={s.moves.map((m) => ({ name: m.name, value: m.n, label: `${m.n}回・平均${f1(m.avg)}` }))}
-              table={{
-                head: ['動き', '回数', '平均', '痛んだ部位'],
-                rows: s.moves.map((m) => [m.name, m.n, f1(m.avg), m.parts.map((x) => `${partName(x.id)} ${x.n}`).join('、')]),
-              }}
-            />
-          ) : <p className="muted">この期間に「痛んだ動き」の記録がありません。</p>}
-        </section>
+        {/* 痛んだ動き（運動中 / 日常） */}
+        {([
+          ['運動中に痛んだ動き', s.moves],
+          ['日常で痛んだ動き', s.dailyMoves],
+        ] as const).map(([title, list]) => (
+          <section className="chartcard" key={title}>
+            <h2>{title}</h2>
+            <p className="small muted">
+              {title === '日常で痛んだ動き' ? '痛みだけの記録と、運動前・運動後の痛みから集計。' : ''}
+              記録された回数と、そのときの痛みの平均。部位で絞り込むと、その部位が痛んだ動きだけになります。
+            </p>
+            {list.length ? (
+              <HBar
+                data={list.map((m) => ({ name: m.name, value: m.n, label: `${m.n}回・平均${f1(m.avg)}` }))}
+                table={{
+                  head: ['動き', '回数', '平均', '痛んだ部位'],
+                  rows: list.map((m) => [m.name, m.n, f1(m.avg), m.parts.map((x) => `${partName(x.id)} ${x.n}`).join('、')]),
+                }}
+              />
+            ) : <p className="muted">この期間に「{title}」の記録がありません。</p>}
+          </section>
+        ))}
 
         {/* 推移 */}
         <section className="chartcard">

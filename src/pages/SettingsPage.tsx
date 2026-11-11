@@ -5,7 +5,7 @@ import { OTHER_TYPE_ID } from '../lib/defaults'
 import { useData } from '../lib/data'
 import type { Settings } from '../lib/types'
 
-type Sub = null | 'types' | 'parts' | 'tags' | 'moves'
+type Sub = null | 'types' | 'parts' | 'tags' | 'moves' | 'dailyMoves'
 
 export function SettingsPage() {
   const { settings, types, parts, records, toast } = useData()
@@ -15,7 +15,7 @@ export function SettingsPage() {
   const fileRef = useRef<HTMLInputElement>(null)
 
   if (sub === 'types' || sub === 'parts') return <MasterTable kind={sub} onBack={() => setSub(null)} />
-  if (sub === 'tags' || sub === 'moves') return <StringList kind={sub} onBack={() => setSub(null)} />
+  if (sub === 'tags' || sub === 'moves' || sub === 'dailyMoves') return <StringList kind={sub} onBack={() => setSub(null)} />
 
   const set = (patch: Partial<Settings>) => {
     void saveSettings(patch)
@@ -67,7 +67,8 @@ export function SettingsPage() {
         <div className="list">
           <div><h3>運動の種類</h3><button className="btn small" onClick={() => setSub('types')}>{types.filter((t) => !t.hidden).length}件 ›</button></div>
           <div><h3>痛みの部位</h3><button className="btn small" onClick={() => setSub('parts')}>{parts.filter((t) => !t.hidden).length}件 ›</button></div>
-          <div><h3>痛んだ動き</h3><button className="btn small" onClick={() => setSub('moves')}>{settings.moves.length}件 ›</button></div>
+          <div><h3>運動中に痛んだ動き</h3><button className="btn small" onClick={() => setSub('moves')}>{settings.moves.length}件 ›</button></div>
+          <div><h3>日常で痛んだ動き</h3><button className="btn small" onClick={() => setSub('dailyMoves')}>{settings.dailyMoves.length}件 ›</button></div>
           <div><h3>痛みの種類タグを使う</h3>{seg('useTags', [[false, 'オフ'], [true, 'オン']])}</div>
           {settings.useTags && <div><h3>痛みの種類タグ</h3><button className="btn small" onClick={() => setSub('tags')}>{settings.tags.length}件 ›</button></div>}
           <div><h3>「続けて追加」の目安</h3>{seg('gapMin', [[30, '30分'], [60, '60分']])}</div>
@@ -205,11 +206,17 @@ function MasterTable({ kind, onBack }: { kind: 'types' | 'parts'; onBack: () => 
   )
 }
 
-function StringList({ kind, onBack }: { kind: 'tags' | 'moves'; onBack: () => void }) {
+const LIST_TEXT = {
+  tags: { title: '痛みの種類タグ', example: 'しびれ' },
+  moves: { title: '運動中に痛んだ動き', example: 'ターン' },
+  dailyMoves: { title: '日常で痛んだ動き', example: '自転車をこぐ' },
+} as const
+
+function StringList({ kind, onBack }: { kind: 'tags' | 'moves' | 'dailyMoves'; onBack: () => void }) {
   const { settings, toast } = useData()
   const [name, setName] = useState('')
   const list = settings[kind]
-  const title = kind === 'tags' ? '痛みの種類タグ' : '痛んだ動き'
+  const { title, example } = LIST_TEXT[kind]
 
   const add = (e: React.FormEvent) => {
     e.preventDefault()
@@ -236,7 +243,7 @@ function StringList({ kind, onBack }: { kind: 'tags' | 'moves'; onBack: () => vo
           ))}
         </div>
         <form className="row" onSubmit={add}>
-          <input className="inp" style={{ flex: 1 }} value={name} onChange={(e) => setName(e.target.value)} placeholder={`追加する名前（例: ${kind === 'tags' ? 'しびれ' : 'ターン'}）`} />
+          <input className="inp" style={{ flex: 1 }} value={name} onChange={(e) => setName(e.target.value)} placeholder={`追加する名前（例: ${example}）`} />
           <button className="btn primary">追加</button>
         </form>
         <p className="small muted" style={{ margin: 0 }}>削除しても、過去の記録には残ります。</p>
