@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react'
 import { exportBackup, parseBackup, restoreBackup, type BackupFile } from '../lib/backup'
 import { db, newId, saveSettings } from '../lib/db'
-import { OTHER_TYPE_ID } from '../lib/defaults'
+import { DEFAULT_LEVEL_GUIDE, OTHER_TYPE_ID } from '../lib/defaults'
 import { useData } from '../lib/data'
 import type { Settings } from '../lib/types'
 
-type Sub = null | 'types' | 'parts' | 'tags' | 'moves' | 'dailyMoves'
+type Sub = null | 'types' | 'parts' | 'tags' | 'moves' | 'dailyMoves' | 'levelGuide'
 
 export function SettingsPage() {
   const { settings, types, parts, records, toast } = useData()
@@ -15,6 +15,7 @@ export function SettingsPage() {
   const fileRef = useRef<HTMLInputElement>(null)
 
   if (sub === 'types' || sub === 'parts') return <MasterTable kind={sub} onBack={() => setSub(null)} />
+  if (sub === 'levelGuide') return <LevelGuide onBack={() => setSub(null)} />
   if (sub === 'tags' || sub === 'moves' || sub === 'dailyMoves') return <StringList kind={sub} onBack={() => setSub(null)} />
 
   const set = (patch: Partial<Settings>) => {
@@ -63,6 +64,11 @@ export function SettingsPage() {
     <>
       <header className="top"><h1>設定</h1></header>
       <div className="section">
+        <div className="grp">痛みの付け方</div>
+        <div className="list">
+          <div><h3>痛みの程度（0〜10）の目安</h3><button className="btn small" onClick={() => setSub('levelGuide')}>見る・書き換える ›</button></div>
+        </div>
+
         <div className="grp">入力の候補（追加・非表示ができます）</div>
         <div className="list">
           <div><h3>運動の種類</h3><button className="btn small" onClick={() => setSub('types')}>{types.filter((t) => !t.hidden).length}件 ›</button></div>
@@ -247,6 +253,51 @@ function StringList({ kind, onBack }: { kind: 'tags' | 'moves' | 'dailyMoves'; o
           <button className="btn primary">追加</button>
         </form>
         <p className="small muted" style={{ margin: 0 }}>削除しても、過去の記録には残ります。</p>
+      </div>
+    </>
+  )
+}
+
+function LevelGuide({ onBack }: { onBack: () => void }) {
+  const { settings, toast } = useData()
+  const [draft, setDraft] = useState(() => DEFAULT_LEVEL_GUIDE.map((d, i) => settings.levelGuide[i] ?? d))
+
+  const save = (i: number) => {
+    const v = draft[i].trim()
+    if (v === (settings.levelGuide[i] ?? '')) return
+    const next = DEFAULT_LEVEL_GUIDE.map((d, j) => (j === i ? v : settings.levelGuide[j] ?? d))
+    void saveSettings({ levelGuide: next })
+    toast(`${i} の目安を変更しました`)
+  }
+  const reset = () => {
+    setDraft([...DEFAULT_LEVEL_GUIDE])
+    void saveSettings({ levelGuide: [...DEFAULT_LEVEL_GUIDE] })
+    toast('初期値に戻しました')
+  }
+
+  return (
+    <>
+      <header className="top"><button className="iconbtn" aria-label="戻る" onClick={onBack}>‹</button><h1>痛みの程度の目安</h1></header>
+      <div className="section stack">
+        <p className="small muted" style={{ margin: 0 }}>
+          記録するとき、数字を押すとここの文が表示されます。毎回同じ基準で付けられるよう、「何ができて、何ができないか」で書くのがおすすめです。
+        </p>
+        <div className="list">
+          {draft.map((t, i) => (
+            <div key={i} className="guide-row">
+              <b>{i}</b>
+              <textarea
+                className="inp guide-inp"
+                rows={2}
+                aria-label={`${i} の目安`}
+                value={t}
+                onChange={(e) => setDraft(draft.map((x, j) => (j === i ? e.target.value : x)))}
+                onBlur={() => save(i)}
+              />
+            </div>
+          ))}
+        </div>
+        <button className="btn small" style={{ justifySelf: 'start' }} onClick={reset}>初期値に戻す</button>
       </div>
     </>
   )

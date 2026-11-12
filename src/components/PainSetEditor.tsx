@@ -84,6 +84,9 @@ export function PainSetEditor({ value, onChange, idPrefix, moves }: Props) {
                 ))}
               </div>
               <div className="scale-cap"><span>0 なし</span><span>1–3 軽い</span><span>4–6 中くらい</span><span>7–10 強い</span></div>
+              {it.level != null && settings.levelGuide[it.level] && (
+                <p className="level-guide" aria-live="polite"><b>{it.level}</b>{settings.levelGuide[it.level]}</p>
+              )}
               {moveList.length > 0 && (
                 <div className="field">
                   <span className="lbl">この痛みが出た動き（あれば・複数可）</span>

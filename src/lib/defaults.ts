@@ -33,12 +33,28 @@ const parts: [string, string][] = [
 ]
 export const DEFAULT_PARTS: BodyPart[] = parts.map(([id, name], order) => ({ id, name, order, hidden: false }))
 
+/** 痛みの程度の目安（初期値）。数値がぶれないよう「できる・できない動き」で書く */
+export const DEFAULT_LEVEL_GUIDE = [
+  '痛みなし',
+  '意識すると分かる程度。動きに影響なし',
+  'ときどき気になる。動きに影響なし',
+  'ずっと気になるが、いつも通り動ける',
+  '動きを少し変えたくなる（かばう・ペースを落とす）',
+  'かばって動く。一部の動きを控えたい',
+  '休憩したり動きを控えたりしないと続けられない',
+  '歩き方が変わる。運動は続けられない',
+  '歩くのがつらい。日常の動作にも困る',
+  'ほとんど動けない',
+  '想像できる中で最も強い痛み',
+]
+
 export const DEFAULT_SETTINGS: Settings = {
   calMode: 'max',
   useTags: false,
   tags: ['ズキズキ', '鈍い', '引っかかる', '抜ける感じ', '張り'],
   moves: ['ジャンプ', 'キック', 'ランジ', 'スクワット', '開脚', 'ひねり', '片脚立ち', 'ステップ昇降', '切り返し', '着地', '下り坂'],
   dailyMoves: ['歩いている時', '歩き始め', '小走り', '階段を上る', '階段を下りる', '立ち上がる', '座っている時', '寝返り', '靴下・靴を履く', '車の乗り降り', '長く立っている時'],
+  levelGuide: DEFAULT_LEVEL_GUIDE,
   intView: '3',
   gapMin: 30,
   lastSide: 'R',

@@ -74,6 +74,8 @@ export interface Settings {
   tags: string[]
   moves: string[]
   dailyMoves: string[]
+  /** 痛みの程度 0〜10 の目安（添字 = 数値）。利用者が書き換えられる */
+  levelGuide: string[]
   intView: '3' | '5'
   gapMin: number
   lastSide: Side
